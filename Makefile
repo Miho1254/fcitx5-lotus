@@ -106,6 +106,11 @@ install: build
 	@install -Dm644 fcitx5-vmk/data/scalable/apps/org.fcitx.Fcitx5.fcitx-vmk.svg \
 		$(DESTDIR)$(ICONDIR)/org.fcitx.Fcitx5.fcitx-vmk.svg
 	
+	@# Cài đặt từ điển
+	@echo "$(YELLOW)  - Cài đặt từ điển...$(NC)"
+	@install -Dm644 fcitx5-vmk/data/vietnamese.cm.dict \
+		$(FCITX5_DATADIR)/bamboo/vietnamese.cm.dict
+	
 	@# Cài đặt license
 	@echo "$(YELLOW)  - Cài đặt license...$(NC)"
 	@install -Dm444 LICENSE $(DESTDIR)$(LICENSEDIR)/LICENSE
@@ -166,6 +171,10 @@ uninstall:
 	@echo "$(YELLOW)  - Xóa icon...$(NC)"
 	@rm -f $(DESTDIR)$(ICONDIR)/fcitx-vmk.svg
 	@rm -f $(DESTDIR)$(ICONDIR)/org.fcitx.Fcitx5.fcitx-vmk.svg
+
+	@# Xóa từ điển
+	@echo "$(YELLOW)  - Xóa từ điển...$(NC)"
+	@rm -f $(FCITX5_DATADIR)/bamboo/vietnamese.cm.dict
 	
 	@# Xóa license
 	@echo "$(YELLOW)  - Xóa license...$(NC)"
