@@ -109,7 +109,7 @@ install: build
 	@# Cài đặt từ điển
 	@echo "$(YELLOW)  - Cài đặt từ điển...$(NC)"
 	@install -Dm644 fcitx5-vmk/data/vietnamese.cm.dict \
-		$(FCITX5_DATADIR)/vmk/vietnamese.cm.dict
+		$(DESTDIR)$(FCITX5_DATADIR)/vmk/vietnamese.cm.dict
 	
 	@# Cài đặt license
 	@echo "$(YELLOW)  - Cài đặt license...$(NC)"
@@ -174,7 +174,7 @@ uninstall:
 
 	@# Xóa từ điển
 	@echo "$(YELLOW)  - Xóa từ điển...$(NC)"
-	@rm -f $(FCITX5_DATADIR)/vmk/vietnamese.cm.dict
+	@rm -f $(DESTDIR)$(FCITX5_DATADIR)/vmk/vietnamese.cm.dict
 	
 	@# Xóa license
 	@echo "$(YELLOW)  - Xóa license...$(NC)"

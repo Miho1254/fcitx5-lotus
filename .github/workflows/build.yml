@@ -1,0 +1,50 @@
+name: Build VMK
+
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Thích thì build thôi'
+        required: false
+        default: 'Manual build'
+
+jobs:
+  build:
+    name: Build on Ubuntu 22.04
+    runs-on: ubuntu-22.04
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          build-essential \
+          cmake \
+          extra-cmake-modules \
+          libfcitx5core-dev \
+          libfcitx5config-dev \
+          libfcitx5utils-dev \
+          libinput-dev \
+          libudev-dev \
+          g++ \
+          golang \
+          hicolor-icon-theme \
+          pkg-config
+      
+    - name: Build VMK
+      run: |
+        make build
+      
+    - name: Create tarball structure
+      run: |
+        mkdir -p dist
+        sudo make install DESTDIR=$(pwd)/dist PREFIX=/usr
+
+        ls -R dist/
+        
+    - name: Compress Artifact
+      run: |
+        tar -czf fcitx5-vmk.tar.gz -C dist .
