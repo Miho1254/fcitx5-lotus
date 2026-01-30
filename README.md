@@ -18,17 +18,19 @@ Server (phần mềm chạy ngầm để giả lập phím và theo dõi chuột
 
 - **Kiến trúc Event-Driven (Sử dụng `poll`):**
   - **Cũ:** Dùng `usleep(5000)` để kiểm tra sự kiện liên tục (Polling 200Hz). Tốn CPU đánh thức hệ thống ngay cả khi không làm gì.
-  - **Mới:** Chuyển sang cơ chế `poll()` với timeout `-1`. Server sẽ "ngủ đông" hoàn toàn khi không có sự kiện. **Mức tiêu thụ CPU khi nhàn rỗi là 0.0%**.
+  - **Mới:** Chuyển sang cơ chế `poll()` với timeout `-1` ở mọi nơi có thể. Server sẽ "ngủ đông" hoàn toàn khi không có sự kiện. **Mức tiêu thụ CPU khi nhàn rỗi là 0.0%**.
 
 - **Single-Threaded (Đơn luồng):** Loại bỏ hoàn toàn `std::thread`. Gộp chung việc lắng nghe Socket và theo dõi Chuột (Libinput) vào một vòng lặp sự kiện duy nhất. Giảm overhead và dung lượng binary.
 
 - **Phản hồi Thời gian thực (Real-time I/O):**
   - **Cũ:** Ghi file log chuột vào ổ cứng (có delay 1s để tránh hỏng ổ).
-  - **Mới:** Sử dụng socket để gửi tín hiệu chuột đến addon, không ghi gì vào file.
+  - **Mới:** Sử dụng socket để gửi tín hiệu chuột đến addon, không ghi gì vào file, nhận tín hiệu ngay lập tức.
 
 - **Bảo mật socket:**
-  - **Cũ:** File socket có quyền 666, bất cứ ai cũng có thể gửi socket nếu biết tên file, với phần mềm foss có file tường minh, đây là lỗ hổng bảo mật nghiêm trọng.
-  - **Mới:** Sử dụng `getsockopt` để kiểm tra tên tiến trình gửi socket, và chỉ khi nào đúng tiến trình mới xử lý tiếp, bảo mật cao hơn.
+  - **Cũ:** File socket có quyền 666, và cả file socket và file mouse flag đều đặt ở thư mục `/home`, bất cứ ai cũng có thể gửi socket nếu biết tên file, cũng như bất cứ ai cũng có thể ghi vào file mouse flag, với phần mềm foss có file tường minh, đây là LỖ HỔNG BẢO MẬT NGHIÊM TRỌNG.
+  - **Mới:**
+    - Sử dụng `getsockopt` để kiểm tra tên tiến trình gửi socket, và chỉ khi nào đúng tiến trình mới xử lý tiếp, không thể giả mạo tên tiến trình.
+    - Không sử dụng file socket như bình thường, mà sử dụng abstract socket, khởi tạo ngay trong kernel, không thể bị chiếm chỗ, không thể bị xóa.
 
 ### 2. VMK Addon (Frontend)
 
@@ -229,7 +231,7 @@ Tùy thuộc vào Desktop Environment/Window Manager và Distro của bạn:
 - **i3/Sway:** Thêm `exec fcitx5 -d` vào file cấu hình (`~/.config/i3/config` hoặc `~/.config/sway/config`)
 - **Hyprland:** Thêm `exec-once = fcitx5 -d` vào `~/.config/hypr/hyprland.conf`
 
-> **Lưu ý:** Hãy xóa autostart của IBus nếu có (thường là `ibus-daemon` hoặc `ibus`).
+> **Lưu ý:** Hãy xóa autostart của IBus nếu có (thường là `ibus-daemon` hoặc `ibus`), hoặc tốt nhất là gỡ luôn ibus ra khỏi máy cho nó khỏe người.
 
 ### 5. Log out / Login
 
@@ -275,8 +277,8 @@ Khi đang ở trong bất kỳ ứng dụng nào, nhấn phím:
 Menu sẽ hiện ra cho phép bạn chọn số từ 1-6 và `` ` ``:
 
 - **Mode 1 (Uinput):** Chế độ mặc định, tương thích tốt nhất (dùng server gửi phím xóa).
-- **Mode 2 (Surrounding Text):** Dùng cơ chế xóa ký tự của ứng dụng (Tương tự Unikey).
-- **Mode 3 (Preedit):** Hiện gạch chân, an toàn nhưng không tự nhiên bằng Mode 1.
+- **Mode 2 (Surrounding Text):** Dùng cơ chế surrounding text của ứng dụng, hoạt động rất tốt trên các app qt và gtk, hoặc các app tự implement surrounding text (khá bất ngờ là neovide, một app frontend cho neovim lại dùng mode này cực ổn).
+- **Mode 3 (Preedit):** Hiện gạch chân, tương thích cao nhưng không tự nhiên bằng Mode 1.
 - **Mode 4 (Hardcore):** Tốc độ cao nhất.
 - **OFF:** Tắt bộ gõ cho ứng dụng này.
 - **Xóa thiết lập cho app:** Quay về dùng cấu hình mặc định.

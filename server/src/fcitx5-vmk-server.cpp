@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  */
+#include <cstddef>
 #include <cstdlib>
 #include <cstring>
 #include <fcntl.h>
@@ -107,10 +108,8 @@ int main(int argc, char *argv[]) {
     boost_process_priority();
     pin_to_pcore();
 
-    std::string backspace_socket =
-        ("/run/vmksocket-" + target_user + "/kb_socket");
-    std::string mouse_flag_socket =
-        ("/run/vmksocket-" + target_user + "/mouse_socket");
+    std::string backspace_socket = "vmksocket-" + target_user + "-kb_socket";
+    std::string mouse_flag_socket = "vmksocket-" + target_user + "-mouse_socket";
 
     // Setup Uinput
     uinput_fd_ = open("/dev/uinput", O_WRONLY | O_NONBLOCK);
@@ -128,35 +127,38 @@ int main(int argc, char *argv[]) {
     int mouse_server_fd =
         socket(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0); // Non-blocking socket
 
-    struct sockaddr_un addr_kb{.sun_family = AF_UNIX};
-    struct sockaddr_un addr_mouse{.sun_family = AF_UNIX};
+    struct sockaddr_un addr_kb{};
+    struct sockaddr_un addr_mouse{};
 
-    strncpy(addr_kb.sun_path, backspace_socket.c_str(),
-            sizeof(addr_kb.sun_path) - 1);
-    strncpy(addr_mouse.sun_path, mouse_flag_socket.c_str(),
-            sizeof(addr_mouse.sun_path) - 1);
+    addr_kb.sun_family = AF_UNIX;
+    addr_mouse.sun_family = AF_UNIX;
 
-    unlink(backspace_socket.c_str());
-    unlink(mouse_flag_socket.c_str());
+    addr_kb.sun_path[0] = '\0';
+    addr_mouse.sun_path[0] = '\0';
 
-    if (bind(server_fd, (struct sockaddr *)&addr_kb, sizeof(addr_kb)) != 0) {
+    memcpy(addr_kb.sun_path + 1, backspace_socket.c_str(),
+           backspace_socket.length());
+    memcpy(addr_mouse.sun_path + 1, mouse_flag_socket.c_str(),
+           mouse_flag_socket.length());
+
+    socklen_t kb_len =
+        offsetof(struct sockaddr_un, sun_path) + backspace_socket.length() + 1;
+    socklen_t mouse_len =
+        offsetof(struct sockaddr_un, sun_path) + mouse_flag_socket.length() + 1;
+
+    if (bind(server_fd, (struct sockaddr *)&addr_kb, kb_len) != 0) {
         std::cerr << "Failed to bind socket" << std::endl;
         return 1;
     }
 
-    if (bind(mouse_server_fd, (struct sockaddr *)&addr_mouse,
-             sizeof(addr_mouse)) != 0) {
+    if (bind(mouse_server_fd, (struct sockaddr *)&addr_mouse, mouse_len) != 0) {
         std::cerr << "Failed to bind socket" << std::endl;
         return 1;
     }
-
-    chmod(backspace_socket.c_str(), 0666);
-    chmod(mouse_flag_socket.c_str(), 0666);
 
     listen(server_fd, 5);
     listen(mouse_server_fd, 5);
 
-    // 6. Setup Libinput (Mouse Monitor)
     struct udev *udev = udev_new();
     struct libinput *li = libinput_udev_create_context(&interface, NULL, udev);
     libinput_udev_assign_seat(li, "seat0");
@@ -272,9 +274,5 @@ int main(int argc, char *argv[]) {
     }
     close(server_fd);
     close(mouse_server_fd);
-
-    unlink(backspace_socket.c_str());
-    unlink(mouse_flag_socket.c_str());
-
     return 0;
 }

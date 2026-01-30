@@ -16,7 +16,7 @@
 }:
 stdenv.mkDerivation rec {
   pname = "fcitx5-vmk";
-  version = "0.9.3-alpha5";
+  version = "0.9.3-alpha6";
 
   src = fetchFromGitHub {
     inherit version;

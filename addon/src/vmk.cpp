@@ -66,6 +66,7 @@
 #include <cstdio>
 #include <fstream>
 #include <limits.h>
+#include <cstddef>
 #endif
 
 int E=1;
@@ -102,7 +103,7 @@ int them=0;
 std::string buildSocketPath(const char *base_path_suffix) {
     const char *username_c = std::getenv("USER");
     std::string username = username_c ? std::string(username_c) : "default";
-    std::string path = "/run/vmksocket-" + username + "/" + std::string(base_path_suffix);
+    std::string path = "vmksocket-" + username + "-" + std::string(base_path_suffix);
     return path;
 }
 
@@ -260,9 +261,12 @@ public:
         struct sockaddr_un addr;
         memset(&addr, 0, sizeof(addr));
         addr.sun_family = AF_UNIX;
-        strncpy(addr.sun_path, current_path.c_str(), sizeof(addr.sun_path) - 1);
 
-        if (connect(current_fd, (struct sockaddr*)&addr, sizeof(addr)) == 0) {
+        addr.sun_path[0] = '\0';
+        memcpy(addr.sun_path + 1, current_path.c_str(), current_path.length());
+        socklen_t len = offsetof(struct sockaddr_un, sun_path) + current_path.length() + 1;
+
+        if (connect(current_fd, (struct sockaddr*)&addr, len) == 0) {
             uinput_client_fd_ = current_fd;
             uinput_fd_ = current_fd;
             return true;
@@ -825,12 +829,15 @@ void mousePressResetThread() {
             continue;
         }
 
-        struct sockaddr_un addr{.sun_family = AF_UNIX};
-        strncpy(addr.sun_path, mouse_socket_path.c_str(),
-                sizeof(addr.sun_path) - 1);
+        struct sockaddr_un addr{};
+        addr.sun_family = AF_UNIX;
+        addr.sun_path[0] = '\0';
+        memcpy(addr.sun_path + 1, mouse_socket_path.c_str(),
+               mouse_socket_path.length());
+        socklen_t len = offsetof(struct sockaddr_un, sun_path) + mouse_socket_path.length() + 1;
 
         // Connect to socket
-        if (connect(sock, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+        if (connect(sock, (struct sockaddr *)&addr, len) < 0) {
             close(sock);
             sleep(1); // Wait for socket to be ready
             continue;

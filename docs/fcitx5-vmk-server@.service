@@ -11,10 +11,6 @@ AmbientCapabilities=CAP_SYS_NICE CAP_SYS_PTRACE
 ProtectProc=default
 ProcSubset=all
 
-RuntimeDirectory=vmksocket-%i
-RuntimeDirectoryMode=0777
-
-Environment=DATA_DIR=/run/vmksocket-%i
 Type=simple
 
 ExecStart=/usr/bin/fcitx5-vmk-server -u %i
