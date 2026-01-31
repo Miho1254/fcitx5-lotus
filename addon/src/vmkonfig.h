@@ -139,9 +139,11 @@ FCITX_CONFIGURATION(
                              _("Use oà, _uý (instead of òa, úy)"), false};
     Option<bool> freeMarking{this, "FreeMarking",
                              _("Allow type with more freedom"), true};
-// SubConfigOption custumKeymap{this, "CustomKeymap", _("Custom Keymap"),
-// ĐỔI TÊN PATH
-//  "fcitx://config/addon/vmk/custom_keymap"};
+    // SubConfigOption custumKeymap{this, "CustomKeymap", _("Custom Keymap"),
+    // ĐỔI TÊN PATH
+    //  "fcitx://config/addon/vmk/custom_keymap"};
+); // Đóng FCITX_CONFIGURATION
+
 } // namespace fcitx
 
 #endif
