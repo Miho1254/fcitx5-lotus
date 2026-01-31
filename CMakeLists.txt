@@ -23,15 +23,11 @@ add_subdirectory(bamboo)
 add_subdirectory(src)
 add_subdirectory(data)
 add_subdirectory(server)
+add_subdirectory(misc)
 
 fcitx5_translate_desktop_file(org.fcitx.Fcitx5.Addon.Vmk.metainfo.xml.in
     org.fcitx.Fcitx5.Addon.Vmk.metainfo.xml XML)
 
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/org.fcitx.Fcitx5.Addon.Vmk.metainfo.xml" DESTINATION ${CMAKE_INSTALL_DATADIR}/metainfo)
-
-install(FILES misc/fcitx5-vmk-server@.service DESTINATION ${CMAKE_INSTALL_LIBDIR}/systemd/system)
-install(FILES misc/99-vmk.rules DESTINATION ${CMAKE_INSTALL_LIBDIR}/udev/rules.d)
-install(FILES misc/module-fcitx5-vmk.conf DESTINATION ${CMAKE_INSTALL_LIBDIR}/modules-load.d)
-install(FILES misc/user-vmk.conf DESTINATION ${CMAKE_INSTALL_LIBDIR}/sysusers.d)
 
 feature_summary(WHAT ALL FATAL_ON_MISSING_REQUIRED_PACKAGES)
