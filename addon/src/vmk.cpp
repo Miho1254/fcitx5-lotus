@@ -56,7 +56,6 @@
 #include <X11/keysym.h>
 #include <atomic>
 #include <chrono>
-#include <condition_variable>
 #include <cstddef>
 #include <cstdio>
 #include <fstream>
@@ -64,24 +63,24 @@
 #include <mutex>
 #endif
 
-fcitx::VMKMode E = fcitx::VMKMode::VMK1;
-std::atomic<int> Y{0};
+fcitx::VMKMode realMode = fcitx::VMKMode::VMK1;
+std::atomic<bool> needEngineReset{false};
 std::string BASE_SOCKET_PATH;
 // Global flag to signal mouse click for closing app mode menu
 static std::atomic<bool> g_mouse_clicked{false};
 
-std::atomic<int> is_deleting_{0};
+std::atomic<bool> is_deleting_{false};
 static const int MAX_BACKSPACE_COUNT = 15;
 std::string SubstrChar(const std::string &s, size_t start, size_t len);
 int compareAndSplitStrings(const std::string &A, const std::string &B,
-                           std::string &same, std::string &Adif,
-                           std::string &Bdif);
+                           std::string &commonPrefix, std::string &deletedPart,
+                           std::string &addedPart);
 std::once_flag monitor_init_flag;
 std::atomic<bool> stop_flag_monitor{false};
 std::atomic<bool> monitor_running{false};
 int uinput_fd_ = -1;
 int uinput_client_fd_ = -1;
-int them = 0;
+int extraBackspace = 0;
 
 std::string buildSocketPath(const char *base_path_suffix) {
     const char *username_c = std::getenv("USER");
@@ -93,16 +92,16 @@ std::string buildSocketPath(const char *base_path_suffix) {
 
 void deletingTimeMonitor() {
     auto t_start = std::chrono::high_resolution_clock::now();
-    int last_val = 0;
+    bool last_val = 0;
 
     while (!stop_flag_monitor.load()) {
-        int current_val = is_deleting_.load();
+        bool current_val = is_deleting_.load();
 
-        if (last_val == 0 && current_val != 0) {
+        if (!last_val && current_val) {
             t_start = std::chrono::high_resolution_clock::now();
         }
 
-        if (current_val != 0) {
+        if (current_val) {
             auto t_now = std::chrono::high_resolution_clock::now();
             auto duration =
                 std::chrono::duration_cast<std::chrono::milliseconds>(t_now -
@@ -110,9 +109,9 @@ void deletingTimeMonitor() {
                     .count();
 
             if (duration >= 1500) {
-                is_deleting_.store(0);
-                Y.store(1);
-                current_val = 0;
+                is_deleting_.store(false);
+                needEngineReset.store(true);
+                current_val = false;
             }
         }
         last_val = current_val;
@@ -201,7 +200,7 @@ class VMKState final : public InputContextProperty {
 
     void setEngine() {
         vmkEngine_.reset();
-        E = fcitx::modeStringToEnum(engine_->config().mode.value());
+        realMode = fcitx::modeStringToEnum(engine_->config().mode.value());
 
         if (engine_->config().inputMethod.value() == "Custom") {
             std::vector<char *> charArray;
@@ -306,7 +305,7 @@ class VMKState final : public InputContextProperty {
             if (current_backspace_count_ < expected_backspaces_) {
                 return false;
             } else {
-                is_deleting_.store(0);
+                is_deleting_.store(false);
                 current_thread_id_.fetch_add(1);
                 std::this_thread::sleep_for(std::chrono::milliseconds(20));
                 ic_->commitString(pending_commit_string_);
@@ -455,17 +454,17 @@ class VMKState final : public InputContextProperty {
             UniqueCPtr<char> preeditC(EnginePullPreedit(vmkEngine_.handle()));
             std::string preeditStr =
                 (preeditC && preeditC.get()[0]) ? preeditC.get() : "";
-            std::string same, Adif, Bdif;
-            if (compareAndSplitStrings(oldPreBuffer_, preeditStr, same, Adif,
-                                       Bdif)) {
-                if (Adif.empty()) {
-                    if (!Bdif.empty()) {
-                        ic_->commitString(Bdif);
+            std::string commonPrefix, deletedPart, addedPart;
+            if (compareAndSplitStrings(oldPreBuffer_, preeditStr, commonPrefix,
+                                       deletedPart, addedPart)) {
+                if (deletedPart.empty()) {
+                    if (!addedPart.empty()) {
+                        ic_->commitString(addedPart);
                         oldPreBuffer_ = preeditStr;
                     }
                 } else {
                     current_backspace_count_ = 0;
-                    pending_commit_string_ = Bdif;
+                    pending_commit_string_ = addedPart;
                     oldPreBuffer_ = preeditStr;
                     if (uinput_client_fd_ < 0) {
                         std::string rawKey = keyEvent.key().toString();
@@ -475,22 +474,23 @@ class VMKState final : public InputContextProperty {
                         return;
                     }
                     if (isAutofillCertain(ic_->surroundingText()))
-                        them = 1;
+                        extraBackspace = 1;
 
-                    if (is_deleting_.load() == 1) {
-                        is_deleting_.store(0);
+                    if (is_deleting_.load()) {
+                        is_deleting_.store(false);
                     }
 
-                    expected_backspaces_ = fcitx::utf8::length(Adif) + 1 + them;
+                    expected_backspaces_ =
+                        fcitx::utf8::length(deletedPart) + 1 + extraBackspace;
                     if (expected_backspaces_ > 0)
-                        is_deleting_.store(1);
+                        is_deleting_.store(true);
                     send_backspace_uinput(expected_backspaces_);
                     int my_id = ++current_thread_id_;
 
                     std::thread([this, my_id]() {
                         auto start = std::chrono::steady_clock::now();
 
-                        while (is_deleting_.load() == 1) {
+                        while (is_deleting_.load()) {
                             if (current_thread_id_.load() != my_id) {
                                 return;
                             }
@@ -511,11 +511,11 @@ class VMKState final : public InputContextProperty {
                                 ic_->commitString(pending_commit_string_);
                                 pending_commit_string_ = "";
                             }
-                            is_deleting_.store(0);
+                            is_deleting_.store(false);
                         }
                     }).detach();
 
-                    them = 0;
+                    extraBackspace = 0;
                 }
             }
             return;
@@ -530,26 +530,26 @@ class VMKState final : public InputContextProperty {
         }
         if (current_backspace_count_ >= (int)expected_backspaces_ &&
             is_deleting_.load()) {
-            is_deleting_.store(0);
+            is_deleting_.store(false);
             current_backspace_count_ = -1;
             expected_backspaces_ = 0;
         }
-        if (Y.load() == 1 &&
-            (E == fcitx::VMKMode::VMK1 || E == fcitx::VMKMode::VMK2 ||
-             E == fcitx::VMKMode::VMK1HC)) {
+        if (needEngineReset.load() && (realMode == fcitx::VMKMode::VMK1 ||
+                                       realMode == fcitx::VMKMode::VMK2 ||
+                                       realMode == fcitx::VMKMode::VMK1HC)) {
             oldPreBuffer_.clear();
             history_.clear();
             ResetEngine(vmkEngine_.handle());
-            is_deleting_.store(0);
+            is_deleting_.store(false);
             current_backspace_count_ = -1;
-            Y.store(0);
+            needEngineReset.store(false);
         }
         if (keyEvent.rawKey().check(FcitxKey_Shift_L) ||
             keyEvent.rawKey().check(FcitxKey_Shift_R))
             return;
         const fcitx::KeySym currentSym = keyEvent.rawKey().sym();
 
-        switch (E) {
+        switch (realMode) {
         case fcitx::VMKMode::VMK1: {
             handleUinputMode(keyEvent, currentSym, true);
             break;
@@ -601,10 +601,10 @@ class VMKState final : public InputContextProperty {
     }
 
     void reset() {
-        is_deleting_.store(0);
+        is_deleting_.store(false);
         clearAllBuffers();
 
-        switch (E) {
+        switch (realMode) {
         case fcitx::VMKMode::Preedit: {
             ic_->inputPanel().reset();
             ic_->updateUserInterface(UserInterfaceComponent::InputPanel);
@@ -624,7 +624,7 @@ class VMKState final : public InputContextProperty {
     }
 
     void commitBuffer() {
-        switch (E) {
+        switch (realMode) {
         case fcitx::VMKMode::Preedit: {
             ic_->inputPanel().reset();
             if (vmkEngine_) {
@@ -728,7 +728,7 @@ void mousePressResetThread() {
 
                 if (n > 0 &&
                     std::string(exe_path) == "/usr/bin/fcitx5-vmk-server") {
-                    Y.store(1, std::memory_order_relaxed);
+                    needEngineReset.store(true, std::memory_order_relaxed);
                     // Also signal that mouse was clicked to close app mode menu
                     g_mouse_clicked.store(true, std::memory_order_relaxed);
                 }
@@ -770,22 +770,22 @@ vmkEngine::vmkEngine(Instance *instance)
     std::vector<fcitx::VMKMode> modes = {
         fcitx::VMKMode::VMK1, fcitx::VMKMode::VMK2, fcitx::VMKMode::Preedit,
         fcitx::VMKMode::VMK1HC};
-    for (const auto &mId : modes) {
+    for (const auto &mode : modes) {
         auto action = std::make_unique<SimpleAction>();
-        action->setShortText(modeEnumToString(mId));
+        action->setShortText(modeEnumToString(mode));
         action->setCheckable(true);
-        uiManager.registerAction("vmk-mode-" + modeEnumToString(mId),
+        uiManager.registerAction("vmk-mode-" + modeEnumToString(mode),
                                  action.get());
         connections_.emplace_back(action->connect<SimpleAction::Activated>(
-            [this, mId](InputContext *ic) {
-                if (globalMode_ == mId) {
+            [this, mode](InputContext *ic) {
+                if (globalMode_ == mode) {
                     return;
                 }
 
-                config_.mode.setValue(modeEnumToString(mId));
+                config_.mode.setValue(modeEnumToString(mode));
                 saveConfig();
-                E = mId;
-                globalMode_ = mId;
+                realMode = mode;
+                globalMode_ = mode;
                 reloadConfig();
                 updateModeAction(ic);
                 if (ic) {
@@ -1046,13 +1046,13 @@ void vmkEngine::activate(const InputMethodEntry &entry,
     updateInputMethodAction(event.inputContext());
     updateCharsetAction(event.inputContext());
 
-    E = targetMode;
+    realMode = targetMode;
 
     auto state = ic->propertyFor(&factory_);
 
     state->clearAllBuffers();
-    is_deleting_.store(0);
-    Y.store(0);
+    is_deleting_.store(false);
+    needEngineReset.store(false);
     ic->inputPanel().reset();
     ic->updateUserInterface(UserInterfaceComponent::InputPanel);
     ic->updatePreedit();
@@ -1125,7 +1125,7 @@ void vmkEngine::keyEvent(const InputMethodEntry &entry, KeyEvent &keyEvent) {
             appRules_[currentConfigureApp_] = selectedMode;
             saveAppRules();
 
-            E = selectedMode;
+            realMode = selectedMode;
             selectionMade = true;
         }
 
@@ -1161,15 +1161,15 @@ void vmkEngine::reset(const InputMethodEntry &entry, InputContextEvent &event) {
 void vmkEngine::deactivate(const InputMethodEntry &entry,
                            InputContextEvent &event) {
     auto state = event.inputContext()->propertyFor(&factory_);
-    if (E == fcitx::VMKMode::Preedit) {
+    if (realMode == fcitx::VMKMode::Preedit) {
         if (event.type() != EventType::InputContextFocusOut)
             state->commitBuffer();
         else
             state->reset();
     } else {
         state->clearAllBuffers();
-        is_deleting_.store(0);
-        Y.store(0);
+        is_deleting_.store(false);
+        needEngineReset.store(false);
         event.inputContext()->inputPanel().reset();
         event.inputContext()->updateUserInterface(
             UserInterfaceComponent::InputPanel);
@@ -1203,8 +1203,8 @@ void vmkEngine::refreshOption() {
 
 void vmkEngine::updateModeAction(InputContext *ic) {
     std::string currentModeStr = config_.mode.value();
-    E = fcitx::modeStringToEnum(currentModeStr);
-    globalMode_ = E;
+    realMode = fcitx::modeStringToEnum(currentModeStr);
+    globalMode_ = realMode;
 
     for (const auto &action : modeSubAction_) {
         action->setChecked(action->name() == "vmk-mode-" + currentModeStr);
@@ -1400,8 +1400,8 @@ std::string SubstrChar(const std::string &s, size_t start, size_t len) {
 }
 
 int compareAndSplitStrings(const std::string &A, const std::string &B,
-                           std::string &same, std::string &Adif,
-                           std::string &Bdif) {
+                           std::string &commonPrefix, std::string &deletedPart,
+                           std::string &addedPart) {
     size_t lengthA = fcitx_utf8_strlen(A.c_str());
     size_t lengthB = fcitx_utf8_strlen(B.c_str());
     size_t minLength = std::min(lengthA, lengthB);
@@ -1418,8 +1418,8 @@ int compareAndSplitStrings(const std::string &A, const std::string &B,
         else
             break;
     }
-    same = SubstrChar(A, 0, matchLength);
-    Adif = SubstrChar(A, matchLength, std::string::npos);
-    Bdif = SubstrChar(B, matchLength, std::string::npos);
-    return (Adif.empty() && Bdif.empty()) ? 1 : 2;
+    commonPrefix = SubstrChar(A, 0, matchLength);
+    deletedPart = SubstrChar(A, matchLength, std::string::npos);
+    addedPart = SubstrChar(B, matchLength, std::string::npos);
+    return (deletedPart.empty() && addedPart.empty()) ? 1 : 2;
 }
