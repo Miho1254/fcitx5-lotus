@@ -254,23 +254,24 @@ namespace fcitx {
         }
 
         bool send_command_to_server(int count) {
-            if (uinput_client_fd_ >= 0) {
-                if (send(uinput_client_fd_, &count, sizeof(count), 0) >= 0)
-                    return true;
+            if (uinput_client_fd_ < 0) {
+                if (!connect_uinput_server())
+                    return false;
             }
-            if (uinput_client_fd_ >= 0) {
-                close(uinput_client_fd_);
-                uinput_client_fd_ = -1;
-                uinput_fd_        = -1;
-            }
-            if (!connect_uinput_server())
-                return false;
+
             if (send(uinput_client_fd_, &count, sizeof(count), 0) < 0) {
                 close(uinput_client_fd_);
-                uinput_client_fd_ = -1;
-                uinput_fd_        = -1;
-                return false;
+                if (!connect_uinput_server())
+                    return false;
+                send(uinput_client_fd_, &count, sizeof(count), 0);
             }
+
+            char ack;
+            recv(uinput_client_fd_, &ack, 1, 0);
+
+            close(uinput_client_fd_);
+            uinput_client_fd_ = -1;
+            uinput_fd_        = -1;
             return true;
         }
 

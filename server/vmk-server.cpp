@@ -205,6 +205,8 @@ int main(int argc, char* argv[]) {
 
                 if (n > 0 && std::string(exe_path) == "/usr/bin/fcitx5") {
                     send_backspace_uinput(num_backspace);
+                    char ack = '7';
+                    send(client_fd, &ack, sizeof(ack), MSG_NOSIGNAL);
                 }
                 close(client_fd);
             }
