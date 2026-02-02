@@ -12,5 +12,5 @@
   <url type="bugtracker">https://github.com/nhktmdzhg/VMK/issues</url>
   <project_group>Fcitx</project_group>
   <releases>
-    <release version="0.9.4" date="@DATE@"/>   </releases>
+    <release version="0.9.5" date="@DATE@"/>   </releases>
 </component>
