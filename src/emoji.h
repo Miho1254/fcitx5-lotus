@@ -1,21 +1,17 @@
 #ifndef EMOJI_H
 #define EMOJI_H
 
+#include <cstddef>
 #include <string>
 #include <vector>
 #include <iostream>
 #include <sstream>
-#include <iomanip>
 #include <algorithm>
 #include "simdjson.h"
 
 struct EmojiEntry {
     std::string trigger;
     std::string output;
-
-    bool        operator<(const EmojiEntry& other) const {
-        return trigger < other.trigger;
-    }
 };
 
 class EmojiLoader {
@@ -58,10 +54,6 @@ class EmojiLoader {
             result += codepointToUTF8(cp);
         }
         return result;
-    }
-
-    void sortData() {
-        std::sort(emojiList.begin(), emojiList.end());
     }
 
   public:
@@ -119,31 +111,69 @@ class EmojiLoader {
             }
         }
 
-        sortData();
         return true;
     }
 
     std::vector<EmojiEntry> search(const std::string& prefix) {
-        std::vector<EmojiEntry> results;
+        if (prefix.empty())
+            return {};
 
-        if (emojiList.empty())
-            return results;
+        struct EmojiEntryFuzzy {
+            EmojiEntry entry;
+            int        score;
+        };
+        std::vector<EmojiEntryFuzzy> results;
 
-        EmojiEntry target;
-        target.trigger = prefix;
+        for (const auto& entry : emojiList) {
+            int    score              = 0;
+            size_t queryIndex         = 0;
+            int    lastMatchIndex     = -1;
+            int    consecutiveMatches = 0;
+            int    firstMatchIndex    = -1;
 
-        auto it = std::lower_bound(emojiList.begin(), emojiList.end(), target);
+            for (size_t i = 0; i < entry.trigger.size() && queryIndex < prefix.size(); ++i) {
+                if (entry.trigger[i] == prefix[queryIndex]) {
+                    if (queryIndex == 0)
+                        firstMatchIndex = i;
 
-        for (; it != emojiList.end(); ++it) {
+                    if (lastMatchIndex != -1 && (int)i == lastMatchIndex + 1) {
+                        ++consecutiveMatches;
+                        score += (20 * consecutiveMatches);
+                    } else {
+                        consecutiveMatches = 0;
+                    }
 
-            if (it->trigger.compare(0, prefix.size(), prefix) != 0) {
-                break;
+                    if (i == 0 || entry.trigger[i - 1] == '_' || entry.trigger[i - 1] == '-') {
+                        score += 50;
+                    }
+
+                    lastMatchIndex = i;
+                    ++queryIndex;
+                }
             }
+            if (queryIndex == prefix.size()) {
+                if (firstMatchIndex == 0)
+                    score += 100;
 
-            results.push_back(*it);
+                score -= static_cast<int>(entry.trigger.size());
+
+                score -= (lastMatchIndex - firstMatchIndex);
+
+                results.push_back({entry, score});
+            }
         }
 
-        return results;
+        std::sort(results.begin(), results.end(), [](const auto& a, const auto& b) {
+            if (a.score != b.score)
+                return a.score > b.score;
+            return a.entry.trigger.size() < b.entry.trigger.size();
+        });
+
+        std::vector<EmojiEntry> finalResults;
+        for (const auto& result : results) {
+            finalResults.push_back(result.entry);
+        }
+        return finalResults;
     }
 
     size_t size() const {
