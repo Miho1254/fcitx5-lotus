@@ -729,7 +729,7 @@ namespace fcitx {
                     }
 
                     if (is_deleting_.load()) {
-                        is_deleting_.store(false);
+                        is_deleting_.store(false, std::memory_order_release);
                     }
 
                     performReplacement(deletedPart, addedPart);
@@ -910,6 +910,7 @@ namespace fcitx {
             EmojiCandidateWord(Text text, VMKState* state, const std::string& emojiOutput) : CandidateWord(std::move(text)), state_(state), emojiOutput_(emojiOutput) {}
 
             void select(InputContext* inputContext) const override {
+                FCITX_UNUSED(inputContext);
                 state_->ic_->commitString(emojiOutput_);
 
                 state_->emojiBuffer_.clear();
@@ -1251,6 +1252,7 @@ namespace fcitx {
     }
 
     void vmkEngine::activate(const InputMethodEntry& entry, InputContextEvent& event) {
+        FCITX_UNUSED(entry);
         auto                     ic = event.inputContext();
         static std::atomic<bool> mouseThreadStarted{false};
         if (!mouseThreadStarted.exchange(true))
@@ -1297,6 +1299,7 @@ namespace fcitx {
     }
 
     void vmkEngine::keyEvent(const InputMethodEntry& entry, KeyEvent& keyEvent) {
+        FCITX_UNUSED(entry);
         auto ic = keyEvent.inputContext();
 
         // Check if mouse was clicked to close app mode menu
@@ -1317,37 +1320,62 @@ namespace fcitx {
             VMKMode selectedMode  = VMKMode::NoMode;
             bool    selectionMade = false;
 
+            KeySym  keySym = keyEvent.key().sym();
+
             // map number key to mode
-            if (keyEvent.key().check(FcitxKey_1))
-                selectedMode = VMKMode::VMKSmooth;
-            else if (keyEvent.key().check(FcitxKey_2))
-                selectedMode = VMKMode::VMK1;
-            else if (keyEvent.key().check(FcitxKey_3))
-                selectedMode = VMKMode::VMK1HC;
-            else if (keyEvent.key().check(FcitxKey_4))
-                selectedMode = VMKMode::VMK2;
-            else if (keyEvent.key().check(FcitxKey_5))
-                selectedMode = VMKMode::Preedit;
-            else if (keyEvent.key().check(FcitxKey_6))
-                selectedMode = VMKMode::Emoji;
-            else if (keyEvent.key().check(FcitxKey_7))
-                selectedMode = VMKMode::Off;
-            else if (keyEvent.key().check(FcitxKey_8)) {
-                if (appRules_.count(currentConfigureApp_)) {
-                    appRules_.erase(currentConfigureApp_);
-                    saveAppRules();
+            switch (keySym) {
+                case FcitxKey_1: {
+                    selectedMode = VMKMode::VMKSmooth;
+                    break;
                 }
-                selectionMade = true;
-            } else if (keyEvent.key().check(FcitxKey_Escape)) {
-                selectionMade = true;
-            } else if (keyEvent.key().check(FcitxKey_grave)) {
-                isSelectingAppMode_ = false;
-                ic->inputPanel().reset();
-                ic->updateUserInterface(UserInterfaceComponent::InputPanel);
-                auto state = ic->propertyFor(&factory_);
-                state->reset();
-                ic->commitString("`");
-                return;
+                case FcitxKey_2: {
+                    selectedMode = VMKMode::VMK1;
+                    break;
+                }
+                case FcitxKey_3: {
+                    selectedMode = VMKMode::VMK1HC;
+                    break;
+                }
+                case FcitxKey_4: {
+                    selectedMode = VMKMode::VMK2;
+                    break;
+                }
+                case FcitxKey_5: {
+                    selectedMode = VMKMode::Preedit;
+                    break;
+                }
+                case FcitxKey_6: {
+                    selectedMode = VMKMode::Emoji;
+                    break;
+                }
+                case FcitxKey_7: {
+                    selectedMode = VMKMode::Off;
+                    break;
+                }
+                case FcitxKey_8: {
+                    if (appRules_.count(currentConfigureApp_)) {
+                        appRules_.erase(currentConfigureApp_);
+                        saveAppRules();
+                    }
+                    selectionMade = true;
+                    break;
+                }
+                case FcitxKey_Escape: {
+                    selectionMade = true;
+                    break;
+                }
+                case FcitxKey_grave: {
+                    isSelectingAppMode_ = false;
+                    ic->inputPanel().reset();
+                    ic->updateUserInterface(UserInterfaceComponent::InputPanel);
+                    auto state = ic->propertyFor(&factory_);
+                    state->reset();
+                    Key key(FcitxKey_grave);
+                    ic->forwardKey(key, false);
+                    ic->forwardKey(key, true);
+                    return;
+                }
+                default: break;
             }
 
             if (selectedMode != VMKMode::NoMode) {
@@ -1385,6 +1413,7 @@ namespace fcitx {
     }
 
     void vmkEngine::reset(const InputMethodEntry& entry, InputContextEvent& event) {
+        FCITX_UNUSED(entry);
         auto state = event.inputContext()->propertyFor(&factory_);
         if (!state->isEmptyHistory() && event.type() != EventType::InputContextFocusOut) {
             return;
@@ -1394,6 +1423,7 @@ namespace fcitx {
     }
 
     void vmkEngine::deactivate(const InputMethodEntry& entry, InputContextEvent& event) {
+        FCITX_UNUSED(entry);
         auto state = event.inputContext()->propertyFor(&factory_);
         if (realMode == VMKMode::Preedit) {
             if (event.type() != EventType::InputContextFocusOut)

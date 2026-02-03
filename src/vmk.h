@@ -158,7 +158,6 @@ namespace fcitx {
         }
 
       private:
-        bool                                              freeMarkingValue_ = true;
         Instance*                                         instance_;
         vmkConfig                                         config_;
         vmkCustomKeymap                                   customKeymap_;

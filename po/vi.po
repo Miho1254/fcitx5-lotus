@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: nhktmdzhg@gmail.com\n"
 "POT-Creation-Date: 2026-02-03 15:34+0700\n"
-"PO-Revision-Date: 2026-02-02 15:38+0700\n"
+"PO-Revision-Date: 2026-02-03 19:05+0700\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
 "Language: vi\n"
@@ -80,7 +80,7 @@ msgstr "Bảng mã"
 
 #: src/vmk.cpp:1447
 msgid "Typing Mode: "
-msgstr "Chế độ gõ:"
+msgstr "Chế độ gõ: "
 
 #: src/vmk.cpp:1478
 msgid "Spell Check: On"
