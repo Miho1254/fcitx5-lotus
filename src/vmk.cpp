@@ -622,6 +622,12 @@ namespace fcitx {
 
         // Helper function for vmk1/vmk1hc/vmksmooth mode
         void handleUinputMode(KeyEvent& keyEvent, KeySym currentSym, bool checkEmptyPreedit, int sleepTime) {
+            if (keyEvent.key().isCursorMove() || keyEvent.key().hasModifier() || currentSym == FcitxKey_Tab || currentSym == FcitxKey_ISO_Left_Tab ||
+                currentSym == FcitxKey_Delete || currentSym == FcitxKey_Escape) {
+                keyEvent.forward();
+                return;
+            }
+
             if (is_deleting_.load(std::memory_order_acquire)) {
                 if (isBackspace(currentSym)) {
                     if (handleUInputKeyPress(keyEvent, currentSym, sleepTime)) {
@@ -635,12 +641,6 @@ namespace fcitx {
 
             if (uinput_fd_ < 0) {
                 setup_uinput();
-            }
-
-            if (keyEvent.key().isCursorMove() || keyEvent.key().hasModifier() || currentSym == FcitxKey_Tab || currentSym == FcitxKey_ISO_Left_Tab ||
-                currentSym == FcitxKey_Delete) {
-                keyEvent.forward();
-                return;
             }
 
             if (isBackspace(currentSym) || currentSym == FcitxKey_Return) {
