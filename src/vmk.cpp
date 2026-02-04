@@ -33,6 +33,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
+#include <ostream>
 #include <stdexcept>
 #include <string>
 #include <thread>
@@ -136,6 +137,7 @@ namespace fcitx {
         constexpr std::string_view InputMethodActionPrefix = "vmk-input-method-";
         constexpr std::string_view CharsetActionPrefix     = "vmk-charset-";
         const std::string          CustomKeymapFile        = "conf/vmk-custom-keymap.conf";
+        constexpr int              MAX_SCAN_LENGTH         = 15;
 
         std::string                macroFile(std::string_view imName) {
             return stringutils::concat("conf/vmk-macro-", imName, ".conf");
@@ -176,6 +178,21 @@ namespace fcitx {
                 ic->forwardKey(key, false);
                 ic->forwardKey(key, true);
             }
+        }
+
+        bool isValidStateCharacter(uint32_t ucs4) {
+            if ((ucs4 >= 'a' && ucs4 <= 'z') || (ucs4 >= 'A' && ucs4 <= 'Z') || (ucs4 >= '0' && ucs4 <= '9')) {
+                return true;
+            }
+            if (ucs4 >= 0xC0)
+                return true;
+
+            return false;
+        }
+
+        bool isWordBreak(uint32_t ucs4) {
+            return ucs4 == ' ' || ucs4 == '\t' || ucs4 == '\n' || ucs4 == '\r' || ucs4 == 0 || // Null char
+                (ucs4 < 65 && ucs4 > 57);
         }
 
     } // namespace
@@ -748,34 +765,141 @@ namespace fcitx {
 
         void handleSurroundingText(KeyEvent& keyEvent) {
             auto ic = keyEvent.inputContext();
-            if (!ic)
+            if (!ic || !ic->capabilityFlags().test(CapabilityFlag::SurroundingText)) {
+                std::cout << "Don't support Surrounding Text" << std::endl;
+                keyEvent.forward();
                 return;
-            EngineProcessKeyEvent(vmkEngine_.handle(), keyEvent.rawKey().sym(), keyEvent.rawKey().states());
-            if (auto commitF = UniqueCPtr<char>(EnginePullCommit(vmkEngine_.handle())); commitF && commitF.get()[0]) {
-                if (!oldPreBuffer_.empty()) {
-                    DeletePreviousNChars(ic, utf8::length(oldPreBuffer_), engine_->instance());
+            }
+
+            const auto& surrounding = ic->surroundingText();
+            if (!surrounding.isValid()) {
+                std::cout << "Surrounding Text is not valid" << std::endl;
+                keyEvent.forward();
+                return;
+            }
+
+            if (isBackspace(keyEvent.rawKey().sym())) {
+                ResetEngine(vmkEngine_.handle());
+                keyEvent.forward();
+                return;
+            }
+
+            const std::string& text   = surrounding.text();
+            int                cursor = surrounding.cursor();
+
+            size_t             textLen = utf8::lengthValidated(text);
+            std::cout << "text: " << text << " | cursor: " << cursor << " | textLen: " << textLen << std::endl;
+
+            if (textLen == utf8::INVALID_LENGTH || cursor <= 0 || cursor > (int)textLen) {
+                goto process_normal;
+            }
+
+            {
+                auto startIter = utf8::nextNChar(text.begin(), cursor);
+                auto endIter   = startIter;
+
+                int  scanCount = 0;
+                while (startIter != text.begin() && scanCount < MAX_SCAN_LENGTH) {
+                    auto prev = startIter;
+                    if (prev != text.begin()) {
+                        do {
+                            --prev;
+                        } while (prev != text.begin() && ((*prev & 0xC0) == 0x80));
+                    }
+
+                    uint32_t ucs4 = utf8::getChar(prev, text.end());
+
+                    if (isWordBreak(ucs4))
+                        break;
+
+                    startIter = prev;
+                    ++scanCount;
                 }
-                ic->commitString(commitF.get());
+
+                std::string oldWord(startIter, endIter);
+
+                std::cout << "oldWord: " << oldWord << std::endl;
+
+                if (oldWord.empty()) {
+                    goto process_normal;
+                }
 
                 ResetEngine(vmkEngine_.handle());
-                oldPreBuffer_.clear();
-                ic->inputPanel().reset();
-                ic->updateUserInterface(UserInterfaceComponent::InputPanel);
+
+                for (uint32_t c : fcitx::utf8::MakeUTF8CharRange(oldWord)) {
+                    EngineProcessKeyEvent(vmkEngine_.handle(), c, 0);
+                }
+
+                bool processed = EngineProcessKeyEvent(vmkEngine_.handle(), keyEvent.rawKey().sym(), keyEvent.rawKey().states());
+
+                if (!processed) {
+                    std::cout << "cannot process" << std::endl;
+                    keyEvent.forward();
+                    ResetEngine(vmkEngine_.handle());
+                    return;
+                }
+
+                auto        commitPtr  = UniqueCPtr<char>(EnginePullCommit(vmkEngine_.handle()));
+                auto        preeditPtr = UniqueCPtr<char>(EnginePullPreedit(vmkEngine_.handle()));
+
+                std::string newWord = "";
+                if (commitPtr && commitPtr.get()[0])
+                    newWord += commitPtr.get();
+                if (preeditPtr && preeditPtr.get()[0])
+                    newWord += preeditPtr.get();
+
+                std::cout << "newWord: " << newWord << std::endl;
+
+                std::string commonPrefix, deletedPart, addedPart;
+                compareAndSplitStrings(oldWord, newWord, commonPrefix, deletedPart, addedPart);
+                std::cout << "commonPrefix: " << commonPrefix << std::endl;
+                std::cout << "deletedPart: " << deletedPart << std::endl;
+                if (deletedPart.empty() && addedPart == keyEvent.key().toString()) {
+                    ResetEngine(vmkEngine_.handle());
+                    keyEvent.forward();
+                    return;
+                }
+
+                if (!deletedPart.empty() || !addedPart.empty()) {
+                    size_t charsToDelete = utf8::length(deletedPart);
+
+                    if (charsToDelete > 0) {
+                        ic->deleteSurroundingText(-static_cast<int>(charsToDelete), static_cast<int>(charsToDelete));
+                    }
+
+                    if (!addedPart.empty()) {
+                        ic->commitString(addedPart);
+                    }
+
+                    ResetEngine(vmkEngine_.handle());
+                    keyEvent.filterAndAccept();
+                    return;
+                }
+
+                ResetEngine(vmkEngine_.handle());
                 keyEvent.filterAndAccept();
                 return;
             }
-            UniqueCPtr<char> preeditC(EnginePullPreedit(vmkEngine_.handle()));
-            std::string      preeditStr = (preeditC && preeditC.get()[0]) ? preeditC.get() : "";
-            if (preeditStr != oldPreBuffer_) {
+
+        process_normal:
+            ResetEngine(vmkEngine_.handle());
+            bool processed = EngineProcessKeyEvent(vmkEngine_.handle(), keyEvent.rawKey().sym(), keyEvent.rawKey().states());
+            if (processed) {
+                auto        commitPtr  = UniqueCPtr<char>(EnginePullCommit(vmkEngine_.handle()));
+                auto        preeditPtr = UniqueCPtr<char>(EnginePullPreedit(vmkEngine_.handle()));
+                std::string out        = "";
+                if (commitPtr && commitPtr.get()[0])
+                    out += commitPtr.get();
+                if (preeditPtr && preeditPtr.get()[0])
+                    out += preeditPtr.get();
+
+                if (!out.empty())
+                    ic->commitString(out);
+
+                ResetEngine(vmkEngine_.handle());
                 keyEvent.filterAndAccept();
-                if (!oldPreBuffer_.empty()) {
-                    DeletePreviousNChars(ic, utf8::length(oldPreBuffer_), engine_->instance());
-                }
-                if (!preeditStr.empty()) {
-                    ic->commitString(preeditStr);
-                    oldPreBuffer_ = preeditStr;
-                } else
-                    oldPreBuffer_.clear();
+            } else {
+                keyEvent.forward();
             }
         }
 
