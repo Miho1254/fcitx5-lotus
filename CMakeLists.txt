@@ -16,6 +16,14 @@ find_package(X11 REQUIRED)
 
 include("${FCITX_INSTALL_CMAKECONFIG_DIR}/Fcitx5Utils/Fcitx5CompilerSettings.cmake")
 add_definitions(-DFCITX_GETTEXT_DOMAIN=\"fcitx5-vmk\") 
+
+find_package(Fcitx5Utils REQUIRED)
+if (Fcitx5Utils_VERSION VERSION_GREATER_EQUAL "5.1.13")
+    add_definitions(-DVMK_USE_MODERN_FCITX_API)
+    message(STATUS "Fcitx5 version ${Fcitx5Utils_VERSION} detected: Using modern API")
+else()
+    message(STATUS "Fcitx5 version ${Fcitx5Utils_VERSION} detected: Using legacy API")
+endif()
 fcitx5_add_i18n_definition()
 
 add_subdirectory(po)
