@@ -44,6 +44,10 @@ Cải thiện trải nghiệm người dùng để tiện lợi hơn khi làm vi
   - Nhấn `` ` `` (dấu huyền) để mở menu chọn nhanh chế độ ngay tại con trỏ văn bản chuẩn UI Fcitx5.
   - Trạng thái hiện tại của App được đánh dấu rõ ràng trong danh sách chọn.
 
+- **Surrounding Text có thể sửa dấu từ cũ**
+
+- **Emoji mode**
+
 ---
 
 ## 📦 Cài đặt
@@ -128,7 +132,8 @@ Hoặc có thể xem cách cài của từng distro [tại đây](INSTALL.md).
 
 #### Cách 2: Biên dịch từ mã nguồn (Build from source)
 
-(Không khuyến khích các bạn cài bằng cách này nếu không hiểu rõ cấu trúc thư mục của distro của bạn, vì ta cần set đúng LIBDIR thì vmk mới có thể chạy được)
+> LƯU Ý, TUYỆT ĐỐI KHÔNG CÀI BẰNG CÁCH NÀY NẾU BẠN KHÔNG HIỂU GÌ VỀ CẤU TRÚC THƯ MỤC CỦA DISTRO CỦA BẠN, NẾU DISTRO CỦA BẠN ĐƯỢC HỖ TRỢ THÔNG QUA OBS Ở TRÊN, HÃY DÙNG NÓ, KHÔNG NÊN DÙNG CÁCH NÀY ĐỂ RỒI LẠI ĐI HỎI TẠI SAO MÌNH CÀI THEO README NHƯNG LẠI BỊ LỖI NOT AVAILABLE. Chỉ nên hỏi nếu distro của bạn không có trong danh sách hỗ trợ của OBS, lúc đấy bạn phải build từ mã nguồn.  
+> (Xin lỗi vì in hoa, vì in thường vẫn có 2 ông không nhìn được, cay vl)
 
 Nếu bạn muốn biên dịch từ mã nguồn, hãy làm theo các bước sau:
 
@@ -293,8 +298,8 @@ Menu sẽ hiện ra cho phép bạn chọn số từ 1-7 và `` ` ``:
 - **Mode 1 (Uinput smooth):** Chế độ mặc định, tương thích tốt (dùng server gửi phím xóa), rất mượt, nhưng nếu gặp các app xử lý kém (như libreoffice) thì tạch, đó là lý do phải có mode 2.
 - **Mode 2 (Uinput):** Cũng như mode 1 nhưng xóa và gửi phím chậm hơn, dùng cho các app có tốc độ xử lý khá chậm.
 - **Mode 3 (Uinput hardcore):** Cũng là mode 1 nhưng độ tương thích khá chấm hỏi, chỉ khuyến khích nếu dùng wine, các app native nên dùng mode 1 hoặc mode 2.
-- **Mode 4 (Surrounding Text):** Dùng cơ chế surrounding text của ứng dụng, hoạt động rất tốt trên các app qt và gtk, có thể sửa dấu của các từ đã gõ, nhược điểm là việc gõ tiếng anh lai tiếng việt trong mode này hơi kém, sửa dấu từ cũ mà có tiếng anh cũng vậy, theo như mình tìm hiểu thì đây là bất cập của engine bamboo, những ai gõ bằng VNI sẽ ít bị ảnh hưởng hơn người dùng Telex. Dù gì thì mình cũng để mode này ở đây cho ai thực sự có nhu cầu (Chú ý là nếu app của bạn không hỗ trợ surrounding text thì sẽ không gõ được tí tiếng việt nào, lúc này các bạn nên đổi mode).
-- **Mode 5 (Preedit):** Hiện gạch chân, tương thích cao nhưng không tự nhiên bằng Mode 1, 2.
+- **Mode 4 (Surrounding Text):** Dùng cơ chế surrounding text của ứng dụng, hoạt động rất tốt trên các app qt và gtk, có thể sửa dấu của các từ đã gõ trước đó, và mode này là mode mượt nhất, thậm chí có thể gõ trên cả thanh địa chỉ của firefox ngon lành (nhưng trong các trang web firefox mình lại thấy nó hơi troll, cái này là vấn đề của firefox, cũng bó tay)
+- **Mode 5 (Preedit):** Hiện gạch chân, tương thích cao nhưng không tự nhiên bằng Mode 1, 2, 4.
 - **Emoji mode:** Chuyển sang chế độ gõ emoji, nguồn emoji từ EmojiOne, search emoji bằng thuật toàn fuzzy search tiện lợi, có thể tra cứu tại bảng [sau](data/emoji/EMOJI_GUIDE.md).
 - **OFF:** Tắt bộ gõ cho ứng dụng này.
 - **Xóa thiết lập cho app:** Quay về dùng cấu hình mặc định.

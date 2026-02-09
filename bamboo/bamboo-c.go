@@ -217,6 +217,18 @@ func ResetEngine(engine uintptr) {
 	bambooEngine.commitPreeditAndReset("")
 }
 
+//export EngineRebuildFromText
+func EngineRebuildFromText(engine uintptr, text *C.cchar) {
+	bambooEngine, ok := cgo.Handle(engine).Value().(*FcitxBambooEngine)
+	if !ok {
+		return
+	}
+	goText := C.GoString(text)
+	bambooEngine.preeditor.RebuildEngineFromText(goText)
+	bambooEngine.preeditText = bambooEngine.getPreeditString()
+	bambooEngine.commitText = ""
+}
+
 func toCStringArray(strs []string) **C.char {
 
 	array := C.malloc(C.size_t(len(strs)+1) * C.size_t(unsafe.Sizeof(uintptr(0))))

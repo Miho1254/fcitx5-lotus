@@ -55,10 +55,8 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/keysym.h>
-#include <atomic>
-#include <chrono>
+#include <condition_variable>
 #include <cstddef>
-#include <cstdio>
 #include <fstream>
 #include <limits.h>
 #include <mutex>
@@ -80,36 +78,68 @@ std::atomic<bool>        monitor_running{false};
 int                      uinput_fd_        = -1;
 int                      uinput_client_fd_ = -1;
 
+std::atomic<int64_t>     replacement_start_ms_{0};
+std::atomic<int>         replacement_thread_id_{0};
+std::atomic<bool>        needFallbackCommit{false};
+
+std::mutex               monitor_mutex;
+std::condition_variable  monitor_cv;
+
 std::string              buildSocketPath(const char* base_path_suffix) {
     const char* username_c = std::getenv("USER");
-    std::string username   = username_c ? std::string(username_c) : "default";
-    std::string path       = "vmksocket-" + username + "-" + std::string(base_path_suffix);
+    std::string path;
+    path.reserve(32);
+    path += "vmksocket-";
+    path += (username_c ? username_c : "default");
+    path += '-';
+    path += base_path_suffix;
     return path;
 }
 
+static inline int64_t now_ms() {
+    return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+}
+
 void deletingTimeMonitor() {
-    auto t_start  = std::chrono::high_resolution_clock::now();
-    bool last_val = 0;
-
     while (!stop_flag_monitor.load()) {
-        bool current_val = is_deleting_.load();
+        int64_t deleting_since = 0;
 
-        if (!last_val && current_val) {
-            t_start = std::chrono::high_resolution_clock::now();
+        {
+            std::unique_lock<std::mutex> lock(monitor_mutex);
+            monitor_cv.wait(lock, [] { return is_deleting_.load(std::memory_order_acquire) || stop_flag_monitor.load(std::memory_order_acquire); });
         }
 
-        if (current_val) {
-            auto t_now    = std::chrono::high_resolution_clock::now();
-            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t_now - t_start).count();
+        if (stop_flag_monitor.load())
+            break;
 
-            if (duration >= 1500) {
+        deleting_since = now_ms();
+
+        while (is_deleting_.load(std::memory_order_acquire) && !stop_flag_monitor.load()) {
+            int64_t current_time = now_ms();
+
+            int64_t rep_start = replacement_start_ms_.load(std::memory_order_acquire);
+            if (rep_start > 0 && (current_time - rep_start) > 200) {
+                int expected_id = replacement_thread_id_.load(std::memory_order_acquire);
+                if (expected_id > 0) {
+                    is_deleting_.store(false, std::memory_order_release);
+                    needFallbackCommit.store(true, std::memory_order_release);
+                    replacement_start_ms_.store(0, std::memory_order_release);
+                    break;
+                }
+            }
+
+            if ((current_time - deleting_since) >= 1500) {
                 is_deleting_.store(false);
                 needEngineReset.store(true);
-                current_val = false;
+                replacement_start_ms_.store(0, std::memory_order_release);
+                break;
+            }
+
+            {
+                std::unique_lock<std::mutex> lock(monitor_mutex);
+                monitor_cv.wait_for(lock, std::chrono::milliseconds(2));
             }
         }
-        last_val = current_val;
-        std::this_thread::sleep_for(std::chrono::milliseconds(2));
     }
 }
 
@@ -144,10 +174,10 @@ namespace fcitx {
         }
 
         uintptr_t newMacroTable(const vmkMacroTable& macroTable) {
+            const auto&        macros = *macroTable.macros;
             std::vector<char*> charArray;
-            RawConfig          r;
-            macroTable.save(r);
-            for (const auto& keymap : *macroTable.macros) {
+            charArray.reserve(macros.size() * 2 + 1);
+            for (const auto& keymap : macros) {
                 charArray.push_back(const_cast<char*>(keymap.key->data()));
                 charArray.push_back(const_cast<char*>(keymap.value->data()));
             }
@@ -157,8 +187,12 @@ namespace fcitx {
 
         std::vector<std::string> convertToStringList(char** array) {
             std::vector<std::string> result;
-            for (int i = 0; array[i]; ++i) {
-                result.push_back(array[i]);
+            int                      count = 0;
+            for (int i = 0; array[i]; ++i)
+                ++count;
+            result.reserve(count);
+            for (int i = 0; i < count; ++i) {
+                result.emplace_back(array[i]);
                 free(array[i]);
             }
             free(array);
@@ -187,8 +221,10 @@ namespace fcitx {
             realMode = modeStringToEnum(engine_->config().mode.value());
 
             if (engine_->config().inputMethod.value() == "Custom") {
+                const auto&        keymaps = *engine_->customKeymap().customKeymap;
                 std::vector<char*> charArray;
-                for (const auto& keymap : *engine_->customKeymap().customKeymap) {
+                charArray.reserve(keymaps.size() * 2 + 1);
+                for (const auto& keymap : keymaps) {
                     charArray.push_back(const_cast<char*>(keymap.key->data()));
                     charArray.push_back(const_cast<char*>(keymap.value->data()));
                 }
@@ -476,12 +512,15 @@ namespace fcitx {
                 default: break;
             }
 
-            if (!Key::keySymToUTF8(currentSym).empty()) {
-                emojiBuffer_ += Key::keySymToUTF8(currentSym);
-                keyEvent.filterAndAccept();
-                updateEmojiPreedit();
-            } else {
-                keyEvent.forward();
+            {
+                std::string utf8Char = Key::keySymToUTF8(currentSym);
+                if (!utf8Char.empty()) {
+                    emojiBuffer_ += utf8Char;
+                    keyEvent.filterAndAccept();
+                    updateEmojiPreedit();
+                } else {
+                    keyEvent.forward();
+                }
             }
         }
 
@@ -547,6 +586,8 @@ namespace fcitx {
                     return false;
                 } else {
                     is_deleting_.store(false);
+                    replacement_start_ms_.store(0, std::memory_order_release);
+                    replacement_thread_id_.store(0, std::memory_order_release);
                     std::this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
                     ic_->commitString(pending_commit_string_);
                     expected_backspaces_     = 0;
@@ -575,36 +616,11 @@ namespace fcitx {
             expected_backspaces_ = utf8::length(deletedPart) + 1 + extraBackspace;
 
             if (expected_backspaces_ > 0) {
+                replacement_thread_id_.store(my_id, std::memory_order_release);
+                replacement_start_ms_.store(now_ms(), std::memory_order_release);
                 is_deleting_.store(true, std::memory_order_release);
+                monitor_cv.notify_one();
                 send_backspace_uinput(expected_backspaces_);
-
-                std::thread([this, my_id]() {
-                    auto start = std::chrono::steady_clock::now();
-
-                    while (true) {
-                        if (current_thread_id_.load(std::memory_order_acquire) != my_id) {
-                            return;
-                        }
-
-                        if (!is_deleting_.load(std::memory_order_acquire)) {
-                            return;
-                        }
-
-                        auto now = std::chrono::steady_clock::now();
-                        if (std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 200) {
-                            break;
-                        }
-
-                        std::this_thread::sleep_for(std::chrono::milliseconds(5));
-                    }
-                    if (current_thread_id_.load(std::memory_order_acquire) == my_id) {
-                        is_deleting_.store(false, std::memory_order_release);
-                        if (!pending_commit_string_.empty()) {
-                            ic_->commitString(pending_commit_string_);
-                            pending_commit_string_ = "";
-                        }
-                    }
-                }).detach();
             } else {
                 if (!addedPart.empty()) {
                     ic_->commitString(addedPart);
@@ -842,11 +858,7 @@ namespace fcitx {
                     goto process_normal;
                 }
 
-                ResetEngine(vmkEngine_.handle());
-
-                for (uint32_t c : fcitx::utf8::MakeUTF8CharRange(oldWord)) {
-                    EngineProcessKeyEvent(vmkEngine_.handle(), c, 0);
-                }
+                EngineRebuildFromText(vmkEngine_.handle(), oldWord.c_str());
 
                 bool processed = EngineProcessKeyEvent(vmkEngine_.handle(), keyEvent.rawKey().sym(), keyEvent.rawKey().states());
 
@@ -934,6 +946,18 @@ namespace fcitx {
                 is_deleting_.store(false);
                 current_backspace_count_ = -1;
                 needEngineReset.store(false);
+            }
+
+            if (needFallbackCommit.load(std::memory_order_acquire)) {
+                needFallbackCommit.store(false, std::memory_order_release);
+                if (current_thread_id_.load(std::memory_order_acquire) == replacement_thread_id_.load(std::memory_order_acquire)) {
+                    if (!pending_commit_string_.empty()) {
+                        ic_->commitString(pending_commit_string_);
+                        pending_commit_string_.clear();
+                    }
+                }
+                replacement_thread_id_.store(0, std::memory_order_release);
+                replacement_start_ms_.store(0, std::memory_order_release);
             }
             if (keyEvent.rawKey().check(FcitxKey_Shift_L) || keyEvent.rawKey().check(FcitxKey_Shift_R))
                 return;
@@ -1131,7 +1155,7 @@ namespace fcitx {
                         }
                     }
 
-                    if (n > 0 && std::string(exe_path) == "/usr/bin/fcitx5-vmk-server") {
+                    if (n > 0 && strcmp(exe_path, "/usr/bin/fcitx5-vmk-server") == 0) {
                         needEngineReset.store(true, std::memory_order_relaxed);
                         // Also signal that mouse was clicked to close app mode menu
                         g_mouse_clicked.store(true, std::memory_order_relaxed);
@@ -1797,22 +1821,25 @@ std::string SubstrChar(const std::string& s, size_t start, size_t len) {
 }
 
 int compareAndSplitStrings(const std::string& A, const std::string& B, std::string& commonPrefix, std::string& deletedPart, std::string& addedPart) {
-    size_t lengthA     = fcitx_utf8_strlen(A.c_str());
-    size_t lengthB     = fcitx_utf8_strlen(B.c_str());
-    size_t minLength   = std::min(lengthA, lengthB);
-    size_t matchLength = 0;
-    for (size_t i = 0; i < minLength; ++i) {
-        const char*  ptrA = fcitx_utf8_get_nth_char(A.c_str(), static_cast<uint32_t>(i));
-        const char*  ptrB = fcitx_utf8_get_nth_char(B.c_str(), static_cast<uint32_t>(i));
+    const char* ptrA   = A.c_str();
+    const char* ptrB   = B.c_str();
+    const char* endA   = ptrA + A.size();
+    const char* endB   = ptrB + B.size();
+    const char* startA = ptrA;
+
+    while (ptrA < endA && ptrB < endB) {
         unsigned int lenA = fcitx_utf8_char_len(ptrA);
         unsigned int lenB = fcitx_utf8_char_len(ptrB);
-        if (lenA == lenB && std::strncmp(ptrA, ptrB, lenA) == 0)
-            ++matchLength;
-        else
+        if (lenA == lenB && std::strncmp(ptrA, ptrB, lenA) == 0) {
+            ptrA += lenA;
+            ptrB += lenB;
+        } else {
             break;
+        }
     }
-    commonPrefix = SubstrChar(A, 0, matchLength);
-    deletedPart  = SubstrChar(A, matchLength, std::string::npos);
-    addedPart    = SubstrChar(B, matchLength, std::string::npos);
+
+    commonPrefix.assign(startA, ptrA);
+    deletedPart.assign(ptrA, endA);
+    addedPart.assign(ptrB, endB);
     return (deletedPart.empty() && addedPart.empty()) ? 1 : 2;
 }
