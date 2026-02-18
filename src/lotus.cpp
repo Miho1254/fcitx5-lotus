@@ -1750,6 +1750,7 @@ namespace fcitx {
                         appRules_.erase(currentConfigureApp_);
                         saveAppRules();
                     }
+                    selectedMode  = globalMode_;
                     selectionMade = true;
                     break;
                 }
@@ -2077,6 +2078,7 @@ namespace fcitx {
                 appRules_.erase(currentConfigureApp_);
                 saveAppRules();
             }
+            setMode(globalMode_, ic);
             cleanup(ic);
         }));
 
