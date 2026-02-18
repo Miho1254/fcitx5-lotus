@@ -6,11 +6,18 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  */
+
+/**
+ * @file lotus-engine.h
+ * @brief Main engine implementation for fcitx5-lotus Vietnamese input method.
+ */
+
 #ifndef _FCITX5_LOTUS_ENGINE_H_
 #define _FCITX5_LOTUS_ENGINE_H_
 
 #include "lotus-config.h"
 #include "emoji.h"
+#include "lotus.h"
 #include <fcitx-config/iniparser.h>
 #include <fcitx-utils/i18n.h>
 #include <fcitx/action.h>
@@ -29,75 +36,255 @@ namespace fcitx {
     class CGoObject;
     class LotusState;
 
+    /**
+     * @brief Main engine class for Lotus input method.
+     *
+     * Handles input processing, configuration management, and UI actions.
+     * Implements fcitx InputMethodEngine interface.
+     */
     class LotusEngine final : public InputMethodEngine {
       public:
+        /**
+         * @brief Gets the fcitx instance.
+         * @return Pointer to the fcitx instance.
+         */
         Instance* instance() const {
             return instance_;
         }
 
+        /**
+         * @brief Constructs the Lotus engine.
+         * @param instance Pointer to fcitx instance.
+         */
         LotusEngine(Instance* instance);
+
+        /**
+         * @brief Destroys the engine and releases resources.
+         */
         ~LotusEngine();
 
-        void                 activate(const InputMethodEntry& entry, InputContextEvent& event) override;
-        void                 deactivate(const fcitx::InputMethodEntry& entry, fcitx::InputContextEvent& event) override;
-        void                 keyEvent(const InputMethodEntry& entry, KeyEvent& keyEvent) override;
+        /**
+         * @brief Activates the input method for an input context.
+         * @param entry Input method entry.
+         * @param event Activation event.
+         */
+        void activate(const InputMethodEntry& entry, InputContextEvent& event) override;
 
-        void                 reset(const InputMethodEntry& entry, InputContextEvent& event) override;
+        /**
+         * @brief Deactivates the input method.
+         * @param entry Input method entry.
+         * @param event Deactivation event.
+         */
+        void deactivate(const fcitx::InputMethodEntry& entry, fcitx::InputContextEvent& event) override;
 
-        void                 reloadConfig() override;
+        /**
+         * @brief Processes key events.
+         * @param entry Input method entry.
+         * @param keyEvent The key event to process.
+         */
+        void keyEvent(const InputMethodEntry& entry, KeyEvent& keyEvent) override;
 
+        /**
+         * @brief Resets the input method state.
+         * @param entry Input method entry.
+         * @param event Reset event.
+         */
+        void reset(const InputMethodEntry& entry, InputContextEvent& event) override;
+
+        /**
+         * @brief Reloads configuration from disk.
+         */
+        void reloadConfig() override;
+
+        /**
+         * @brief Gets the current configuration.
+         * @return Pointer to configuration object.
+         */
         const Configuration* getConfig() const override {
             return &config_;
         }
 
+        /**
+         * @brief Gets a sub-configuration by path.
+         * @param path Sub-config path.
+         * @return Pointer to sub-configuration.
+         */
         const Configuration* getSubConfig(const std::string& path) const override;
 
-        void                 setConfig(const RawConfig& config) override;
+        /**
+         * @brief Applies configuration changes.
+         * @param config New configuration.
+         */
+        void setConfig(const RawConfig& config) override;
 
-        void                 setSubConfig(const std::string& path, const RawConfig& config) override;
+        /**
+         * @brief Applies sub-configuration changes.
+         * @param path Sub-config path.
+         * @param config New sub-configuration.
+         */
+        void setSubConfig(const std::string& path, const RawConfig& config) override;
 
-        std::string          subMode(const fcitx::InputMethodEntry& entry, fcitx::InputContext& inputContext) override;
+        /**
+         * @brief Gets the current sub-mode label.
+         * @param entry Input method entry.
+         * @param inputContext Current input context.
+         * @return Mode label string.
+         */
+        std::string subMode(const fcitx::InputMethodEntry& entry, fcitx::InputContext& inputContext) override;
 
-        std::string          overrideIcon(const fcitx::InputMethodEntry& entry) override;
+        /**
+         * @brief Gets the override icon name.
+         * @param entry Input method entry.
+         * @return Icon name string.
+         */
+        std::string overrideIcon(const fcitx::InputMethodEntry& entry) override;
 
-        const auto&          config() const {
+        /**
+         * @brief Gets the current configuration.
+         * @return Reference to lotus configuration.
+         */
+        const auto& config() const {
             return config_;
         }
+
+        /**
+         * @brief Gets the custom keymap configuration.
+         * @return Reference to custom keymap.
+         */
         const auto& customKeymap() const {
             return customKeymap_;
         }
 
+        /**
+         * @brief Gets the dictionary handle.
+         * @return CGo handle for the dictionary.
+         */
         uintptr_t dictionary() const {
             return dictionary_.handle();
         }
 
+        /**
+         * @brief Gets the macro table handle.
+         * @return CGo handle for the macro table.
+         */
         uintptr_t macroTable() const;
 
-        void      refreshEngine();
-        void      refreshOption();
+        /**
+         * @brief Refreshes the bamboo engine with current settings.
+         */
+        void refreshEngine();
 
-        void      saveConfig() {
+        /**
+         * @brief Refreshes engine options from configuration.
+         */
+        void refreshOption();
+
+        /**
+         * @brief Saves current configuration to disk.
+         */
+        void saveConfig() {
             safeSaveAsIni(config_, "conf/lotus.conf");
         }
+
+        /**
+         * @brief Updates the mode action UI.
+         * @param ic Current input context.
+         */
         void updateModeAction(InputContext* ic);
+
+        /**
+         * @brief Updates the spell check action UI.
+         * @param ic Current input context.
+         */
         void updateSpellAction(InputContext* ic);
+
+        /**
+         * @brief Updates the macro action UI.
+         * @param ic Current input context.
+         */
         void updateMacroAction(InputContext* ic);
+
+        /**
+         * @brief Updates the capitalize macro action UI.
+         * @param ic Current input context.
+         */
         void updateCapitalizeMacroAction(InputContext* ic);
+
+        /**
+         * @brief Updates the auto non-VN restore action UI.
+         * @param ic Current input context.
+         */
         void updateAutoNonVnRestoreAction(InputContext* ic);
+
+        /**
+         * @brief Updates the modern style action UI.
+         * @param ic Current input context.
+         */
         void updateModernStyleAction(InputContext* ic);
+
+        /**
+         * @brief Updates the free marking action UI.
+         * @param ic Current input context.
+         */
         void updateFreeMarkingAction(InputContext* ic);
+
+        /**
+         * @brief Updates the fix uinput with ACK action UI.
+         * @param ic Current input context.
+         */
         void updateFixUinputWithAckAction(InputContext* ic);
+
+        /**
+         * @brief Updates the input method action UI.
+         * @param ic Current input context.
+         */
         void updateInputMethodAction(InputContext* ic);
+
+        /**
+         * @brief Updates the charset action UI.
+         * @param ic Current input context.
+         */
         void updateCharsetAction(InputContext* ic);
+
+        /**
+         * @brief Populates input method names from bamboo core.
+         */
         void populateConfig();
-        // ibus-bamboo mode save/load
-        void         loadAppRules();
-        void         saveAppRules();
-        void         showAppModeMenu(InputContext* ic);
-        void         closeAppModeMenu();
+
+        /**
+         * @brief Loads application-specific mode rules.
+         */
+        void loadAppRules();
+
+        /**
+         * @brief Saves application-specific mode rules.
+         */
+        void saveAppRules();
+
+        /**
+         * @brief Shows the application mode selection menu.
+         * @param ic Current input context.
+         */
+        void showAppModeMenu(InputContext* ic);
+
+        /**
+         * @brief Closes the application mode selection menu.
+         */
+        void closeAppModeMenu();
+
+        /**
+         * @brief Gets the emoji loader.
+         * @return Reference to emoji loader instance.
+         */
         EmojiLoader& emojiLoader() {
             return emojiLoader_;
         }
+
+        /**
+         * @brief Sets the current input mode.
+         * @param mode The mode to set.
+         * @param ic Current input context.
+         */
         void setMode(LotusMode mode, InputContext* ic);
 
       private:
@@ -130,7 +317,6 @@ namespace fcitx {
         std::unique_ptr<SimpleAction>                     fixUinputWithAckAction_;
         std::vector<ScopedConnection>                     connections_;
         CGoObject                                         dictionary_;
-        // ibus-bamboo mode save/load
         std::unordered_map<std::string, fcitx::LotusMode> appRules_;
         std::string                                       appRulesPath_;
         bool                                              isSelectingAppMode_ = false;
@@ -139,8 +325,16 @@ namespace fcitx {
         EmojiLoader                                       emojiLoader_;
     };
 
+    /**
+     * @brief Factory class for creating LotusEngine instances.
+     */
     class LotusFactory : public AddonFactory {
       public:
+        /**
+         * @brief Creates a new LotusEngine instance.
+         * @param manager Pointer to addon manager.
+         * @return New engine instance.
+         */
         AddonInstance* create(AddonManager* manager) override {
             registerDomain("fcitx5-lotus", FCITX_INSTALL_LOCALEDIR);
             return new LotusEngine(manager->instance());

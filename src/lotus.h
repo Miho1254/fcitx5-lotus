@@ -6,18 +6,18 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  */
+
+/**
+ * @file lotus.h
+ * @brief Main header file for fcitx5-lotus Vietnamese input method.
+ */
+
 #ifndef _FCITX5_LOTUS_H_
 #define _FCITX5_LOTUS_H_
 
 #include "bamboo-core.h"
-#include "lotus-config.h"
 #include <cstdint>
-#include <functional>
-#include <memory>
 #include <optional>
-#include <string>
-#include <unordered_map>
-#include <vector>
 
 namespace fcitx {
 
@@ -25,12 +25,22 @@ namespace fcitx {
     class LotusState;
 
     /**
-     * @brief RAII wrapper for CGo handle (uintptr_t).
+     * @brief RAII wrapper for CGo handles.
+     *
+     * Manages lifecycle of Go objects accessed from C++ through uintptr_t handles.
+     * Automatically releases handles on destruction.
      */
     class CGoObject {
       public:
+        /**
+         * @brief Constructs with optional handle.
+         * @param handle Optional CGo handle.
+         */
         CGoObject(std::optional<uintptr_t> handle = std::nullopt) : handle_(handle) {}
 
+        /**
+         * @brief Releases the handle on destruction.
+         */
         ~CGoObject() {
             if (handle_) {
                 DeleteObject(*handle_);
@@ -43,15 +53,27 @@ namespace fcitx {
         CGoObject(CGoObject&& other)            = default;
         CGoObject& operator=(CGoObject&& other) = default;
 
-        void       reset(std::optional<uintptr_t> handle = std::nullopt) {
+        /**
+         * @brief Resets with a new handle, releasing the old one.
+         * @param handle New handle to store.
+         */
+        void reset(std::optional<uintptr_t> handle = std::nullopt) {
             clear();
             handle_ = handle;
         }
 
+        /**
+         * @brief Gets the stored handle.
+         * @return The handle value or 0 if empty.
+         */
         uintptr_t handle() const {
             return handle_.value_or(0);
         }
 
+        /**
+         * @brief Releases ownership of the handle.
+         * @return The handle value or 0 if empty.
+         */
         uintptr_t release() {
             if (handle_) {
                 uintptr_t v = *handle_;
@@ -61,11 +83,18 @@ namespace fcitx {
             return 0;
         }
 
+        /**
+         * @brief Checks if a valid handle is stored.
+         * @return True if handle exists and is non-zero.
+         */
         explicit operator bool() const {
             return handle_.has_value() && *handle_ != 0;
         }
 
       private:
+        /**
+         * @brief Releases the current handle.
+         */
         void clear() {
             if (handle_) {
                 DeleteObject(*handle_);
@@ -77,10 +106,5 @@ namespace fcitx {
     };
 
 } // namespace fcitx
-
-#include "emoji.h"
-#include "lotus-candidates.h"
-#include "lotus-state.h"
-#include "lotus-engine.h"
 
 #endif // _FCITX5_LOTUS_H_
