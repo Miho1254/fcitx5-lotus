@@ -139,7 +139,7 @@ namespace fcitx {
             return;
 
         ResetEngine(lotusEngine_.handle());
-        for (uint32_t c : fcitx::utf8::MakeUTF8CharRange(buffer)) {
+        for (uint32_t c : utf8::MakeUTF8CharRange(buffer)) {
             if (c == static_cast<uint32_t>('\b')) {
                 EngineProcessKeyEvent(lotusEngine_.handle(), FcitxKey_BackSpace, 0);
             } else {

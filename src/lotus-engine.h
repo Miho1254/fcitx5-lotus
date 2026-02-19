@@ -75,7 +75,7 @@ namespace fcitx {
          * @param entry Input method entry.
          * @param event Deactivation event.
          */
-        void deactivate(const fcitx::InputMethodEntry& entry, fcitx::InputContextEvent& event) override;
+        void deactivate(const InputMethodEntry& entry, InputContextEvent& event) override;
 
         /**
          * @brief Processes key events.
@@ -130,14 +130,14 @@ namespace fcitx {
          * @param inputContext Current input context.
          * @return Mode label string.
          */
-        std::string subMode(const fcitx::InputMethodEntry& entry, fcitx::InputContext& inputContext) override;
+        std::string subMode(const InputMethodEntry& entry, InputContext& inputContext) override;
 
         /**
          * @brief Gets the override icon name.
          * @param entry Input method entry.
          * @return Icon name string.
          */
-        std::string overrideIcon(const fcitx::InputMethodEntry& entry) override;
+        std::string overrideIcon(const InputMethodEntry& entry) override;
 
         /**
          * @brief Gets the current configuration.
@@ -288,41 +288,41 @@ namespace fcitx {
         void setMode(LotusMode mode, InputContext* ic);
 
       private:
-        Instance*                                         instance_;
-        lotusConfig                                       config_;
-        lotusCustomKeymap                                 customKeymap_;
+        Instance*                                        instance_;
+        lotusConfig                                      config_;
+        lotusCustomKeymap                                customKeymap_;
 
-        std::unordered_map<std::string, lotusMacroTable>  macroTables_;
-        std::unordered_map<std::string, CGoObject>        macroTableObject_;
+        std::unordered_map<std::string, lotusMacroTable> macroTables_;
+        std::unordered_map<std::string, CGoObject>       macroTableObject_;
 
-        FactoryFor<LotusState>                            factory_;
-        std::vector<std::string>                          imNames_;
+        FactoryFor<LotusState>                           factory_;
+        std::vector<std::string>                         imNames_;
 
-        std::unique_ptr<SimpleAction>                     inputMethodAction_;
-        std::vector<std::unique_ptr<SimpleAction>>        inputMethodSubAction_;
-        std::unique_ptr<Menu>                             inputMethodMenu_;
-        std::unique_ptr<fcitx::SimpleAction>              modeAction_;
-        std::unique_ptr<fcitx::Menu>                      modeMenu_;
-        std::vector<std::unique_ptr<fcitx::SimpleAction>> modeSubAction_;
-        std::unique_ptr<SimpleAction>                     charsetAction_;
-        std::vector<std::unique_ptr<SimpleAction>>        charsetSubAction_;
-        std::unique_ptr<Menu>                             charsetMenu_;
+        std::unique_ptr<SimpleAction>                    inputMethodAction_;
+        std::vector<std::unique_ptr<SimpleAction>>       inputMethodSubAction_;
+        std::unique_ptr<Menu>                            inputMethodMenu_;
+        std::unique_ptr<SimpleAction>                    modeAction_;
+        std::unique_ptr<Menu>                            modeMenu_;
+        std::vector<std::unique_ptr<SimpleAction>>       modeSubAction_;
+        std::unique_ptr<SimpleAction>                    charsetAction_;
+        std::vector<std::unique_ptr<SimpleAction>>       charsetSubAction_;
+        std::unique_ptr<Menu>                            charsetMenu_;
 
-        std::unique_ptr<SimpleAction>                     spellCheckAction_;
-        std::unique_ptr<SimpleAction>                     macroAction_;
-        std::unique_ptr<SimpleAction>                     capitalizeMacroAction_;
-        std::unique_ptr<SimpleAction>                     autoNonVnRestoreAction_;
-        std::unique_ptr<SimpleAction>                     modernStyleAction_;
-        std::unique_ptr<SimpleAction>                     freeMarkingAction_;
-        std::unique_ptr<SimpleAction>                     fixUinputWithAckAction_;
-        std::vector<ScopedConnection>                     connections_;
-        CGoObject                                         dictionary_;
-        std::unordered_map<std::string, fcitx::LotusMode> appRules_;
-        std::string                                       appRulesPath_;
-        bool                                              isSelectingAppMode_ = false;
-        std::string                                       currentConfigureApp_;
-        LotusMode                                         globalMode_;
-        EmojiLoader                                       emojiLoader_;
+        std::unique_ptr<SimpleAction>                    spellCheckAction_;
+        std::unique_ptr<SimpleAction>                    macroAction_;
+        std::unique_ptr<SimpleAction>                    capitalizeMacroAction_;
+        std::unique_ptr<SimpleAction>                    autoNonVnRestoreAction_;
+        std::unique_ptr<SimpleAction>                    modernStyleAction_;
+        std::unique_ptr<SimpleAction>                    freeMarkingAction_;
+        std::unique_ptr<SimpleAction>                    fixUinputWithAckAction_;
+        std::vector<ScopedConnection>                    connections_;
+        CGoObject                                        dictionary_;
+        std::unordered_map<std::string, LotusMode>       appRules_;
+        std::string                                      appRulesPath_;
+        bool                                             isSelectingAppMode_ = false;
+        std::string                                      currentConfigureApp_;
+        LotusMode                                        globalMode_;
+        EmojiLoader                                      emojiLoader_;
     };
 
     /**

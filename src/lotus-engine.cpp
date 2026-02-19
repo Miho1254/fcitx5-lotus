@@ -853,7 +853,7 @@ namespace fcitx {
         }
     }
 
-    std::string LotusEngine::overrideIcon(const fcitx::InputMethodEntry& /*entry*/) {
+    std::string LotusEngine::overrideIcon(const InputMethodEntry& /*entry*/) {
         switch (realMode) {
             case LotusMode::Off: return "fcitx-lotus-off";
             case LotusMode::Emoji: return "fcitx-lotus-emoji";
