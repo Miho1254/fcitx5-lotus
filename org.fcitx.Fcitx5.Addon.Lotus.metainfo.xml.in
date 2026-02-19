@@ -12,6 +12,6 @@
   <url type="bugtracker">https://github.com/nhktmdzhg/fcitx5-lotus/issues</url>
   <project_group>Fcitx</project_group>
   <releases>
-    <release version="0.12.2" date="2026-02-18" />
+    <release version="1.0.0" date="2026-02-19" />
   </releases>
 </component>

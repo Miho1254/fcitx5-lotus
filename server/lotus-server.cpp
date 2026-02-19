@@ -5,54 +5,32 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  */
-#include <atomic>
-#include <cstddef>
-#include <cstdlib>
-#include <cstring>
-#include <fcntl.h>
+
+#include "lotus-server.h"
+
 #include <iostream>
-#include <libinput.h>
-#include <libudev.h>
-#include <limits.h>
-#include <linux/input.h>
-#include <linux/uinput.h>
-#include <poll.h>
-#include <pwd.h>
-#include <sched.h>
 #include <signal.h>
-#include <string>
-#include <sys/ioctl.h>
-#include <sys/resource.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/un.h>
-#include <unistd.h>
 #include <vector>
-// --- VARIABLES ---
-static int               uinput_fd_ = -1;
-static std::atomic<bool> g_running{true};
 
-// signal handler
+int               uinput_fd_ = -1;
+std::atomic<bool> g_running{true};
 
-static void signal_handler(int sig) {
+void              signal_handler(int sig) {
     if (sig == SIGTERM || sig == SIGINT) {
         g_running.store(false);
     }
 }
 
-// get username
 std::string get_current_username() {
     struct passwd* pw = getpwuid(getuid());
     return pw ? pw->pw_name : "unknown";
 }
 
-// system functions
-static void boost_process_priority() {
+void boost_process_priority() {
     setpriority(PRIO_PROCESS, 0, -10);
 }
 
-static void pin_to_pcore() {
+void pin_to_pcore() {
     cpu_set_t cpuset;
     CPU_ZERO(&cpuset);
     for (int i = 0; i <= 3; ++i)
@@ -60,7 +38,7 @@ static void pin_to_pcore() {
     sched_setaffinity(0, sizeof(cpuset), &cpuset);
 }
 
-static void send_single_backspace() {
+void send_single_backspace() {
     if (uinput_fd_ < 0)
         return;
     struct input_event ev[2];
@@ -81,21 +59,20 @@ static void send_single_backspace() {
     write(uinput_fd_, ev, sizeof(ev));
 }
 
-// LIBINPUT HELPERS
-static int open_restricted(const char* path, int flags, void* /*user_data*/) {
+int open_restricted(const char* path, int flags, void* /*user_data*/) {
     int fd = open(path, flags);
     return fd < 0 ? -errno : fd;
 }
-static void close_restricted(int fd, void* /*user_data*/) {
+
+void close_restricted(int fd, void* /*user_data*/) {
     close(fd);
 }
 
-static const struct libinput_interface interface = {
+const struct libinput_interface interface = {
     .open_restricted  = open_restricted,
     .close_restricted = close_restricted,
 };
 
-// MAIN FUNCTION
 int main(int argc, char* argv[]) {
     std::string target_user;
     if (argc == 3 && strcmp(argv[1], "-u") == 0) {
@@ -134,8 +111,8 @@ int main(int argc, char* argv[]) {
         sleep(1);
     }
 
-    int                server_fd       = socket(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0); // Non-blocking socket
-    int                mouse_server_fd = socket(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0); // Non-blocking socket
+    int                server_fd       = socket(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0);
+    int                mouse_server_fd = socket(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0);
 
     struct sockaddr_un addr_kb{};
     struct sockaddr_un addr_mouse{};
@@ -191,28 +168,23 @@ int main(int argc, char* argv[]) {
         int ret          = poll(fds.data(), fds.size(), poll_timeout);
 
         if (ret < 0) {
-            // if error, continue
             if (errno == EINTR) {
                 if (!g_running.load(std::memory_order_acquire)) {
                     break;
                 }
                 continue;
             }
-            break; // real error
+            break;
         }
 
         if (ret == 0) {
             if (pending_backspaces > 0) {
                 send_single_backspace();
                 --pending_backspaces;
-                if (pending_backspaces == 0) {
-                    char ack = '7';
-                    send(fds[3].fd, &ack, sizeof(ack), MSG_NOSIGNAL | MSG_DONTWAIT);
-                }
             }
         }
 
-        libinput_dispatch(li); // Update internal state
+        libinput_dispatch(li);
 
         // handle socket (backspace)
         if (fds[0].revents & POLLIN) {
@@ -280,15 +252,12 @@ int main(int argc, char* argv[]) {
 
                 if (type == LIBINPUT_EVENT_POINTER_BUTTON) {
                     struct libinput_event_pointer* p = libinput_event_get_pointer_event(event);
-                    // only when pressed
                     if (libinput_event_pointer_get_button_state(p) == LIBINPUT_BUTTON_STATE_PRESSED) {
-                        // send flag through socket
                         if (addon_fd >= 0) {
                             send(addon_fd, "C", 1, MSG_NOSIGNAL | MSG_DONTWAIT);
                         }
                     }
                 } else if (type == LIBINPUT_EVENT_DEVICE_ADDED) {
-                    // add new device
                     struct libinput_device* dev = libinput_event_get_device(event);
                     if (libinput_device_config_tap_get_finger_count(dev) > 0) {
                         libinput_device_config_tap_set_enabled(dev, LIBINPUT_CONFIG_TAP_ENABLED);

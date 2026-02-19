@@ -1,5 +1,10 @@
 set(fcitx_lotus_sources
   lotus.cpp
+  lotus-engine.cpp
+  lotus-state.cpp
+  lotus-candidates.cpp
+  lotus-utils.cpp
+  lotus-monitor.cpp
 )
 
 add_library(lotus MODULE ${fcitx_lotus_sources})

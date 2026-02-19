@@ -1,3 +1,15 @@
+/*
+ * SPDX-FileCopyrightText: 2026 Nguyễn Hoàng Kỳ  <nhktmdzhg@gmail.com>
+ *
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ *
+ */
+
+/**
+ * @file emoji.h
+ * @brief Emoji search and loading utilities.
+ */
+
 #ifndef EMOJI_H
 #define EMOJI_H
 
@@ -6,22 +18,38 @@
 #include <string>
 #include <vector>
 
+/**
+ * @brief Single emoji entry with trigger and output.
+ */
 struct EmojiEntry {
-    std::string trigger;
-    std::string output;
+    std::string trigger; ///< Trigger text (e.g., "smile")
+    std::string output;  ///< Actual emoji character
 };
 
 #include "emoji_data.h"
 
+/**
+ * @brief Emoji loader with fuzzy search capability.
+ *
+ * Loads emoji list and provides fuzzy matching search.
+ */
 class EmojiLoader {
   private:
-    std::vector<EmojiEntry> emojiList;
+    std::vector<EmojiEntry> emojiList; ///< Internal emoji storage
 
   public:
+    /**
+     * @brief Constructs loader and initializes emoji list.
+     */
     EmojiLoader() {
         emojiList = EMOJI_LIST;
     }
 
+    /**
+     * @brief Searches emoji by prefix with fuzzy matching.
+     * @param prefix Search query.
+     * @return Sorted list of matching emojis.
+     */
     std::vector<EmojiEntry> search(const std::string& prefix) {
         if (prefix.empty())
             return {};
@@ -84,6 +112,10 @@ class EmojiLoader {
         return finalResults;
     }
 
+    /**
+     * @brief Gets total emoji count.
+     * @return Number of emojis loaded.
+     */
     size_t size() const {
         return emojiList.size();
     }
