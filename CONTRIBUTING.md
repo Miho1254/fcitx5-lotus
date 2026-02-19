@@ -29,7 +29,7 @@ Cảm ơn bạn quan tâm đến việc đóng góp cho dự án fcitx5-lotus! T
 
 ```bash
 # Clone repository
-git clone https://github.com/nhktmdzhg/fcitx5-lotus.git
+git clone https://github.com/LotusInputMethod/fcitx5-lotus.git
 cd fcitx5-lotus
 
 # Khởi tạo submodules
@@ -50,7 +50,7 @@ Fork repository này trên GitHub và clone fork của bạn về máy.
 ```bash
 git clone https://github.com/yourusername/fcitx5-lotus.git
 cd fcitx5-lotus
-git remote add upstream https://github.com/nhktmdzhg/fcitx5-lotus.git
+git remote add upstream https://github.com/LotusInputMethod/fcitx5-lotus.git
 ```
 
 ### 2. Tạo nhánh mới

@@ -3,7 +3,7 @@
 <a id="readme-top"></a>
 
 <div align="center">
-  <a href="https://github.com/nhktmdzhg/fcitx5-lotus">
+  <a href="https://github.com/LotusInputMethod/fcitx5-lotus">
     <img src="data/icons/scalable/apps/fcitx-lotus.svg" alt="Logo" width="80" height="80">
   </a>
 
@@ -13,20 +13,20 @@
     <b>A simple, high-performance Vietnamese input method for Linux</b>
     <br />
     <br />
-    <a href="https://github.com/nhktmdzhg/fcitx5-lotus/releases">
-      <img src="https://img.shields.io/github/v/release/nhktmdzhg/fcitx5-lotus?style=flat&color=success" alt="Release">
+    <a href="https://github.com/LotusInputMethod/fcitx5-lotus/releases">
+      <img src="https://img.shields.io/github/v/release/LotusInputMethod/fcitx5-lotus?style=flat&color=success" alt="Release">
     </a>
-    <a href="https://github.com/nhktmdzhg/fcitx5-lotus/blob/main/LICENSE">
-      <img src="https://img.shields.io/github/license/nhktmdzhg/fcitx5-lotus?style=flat&color=blue" alt="License">
+    <a href="https://github.com/LotusInputMethod/fcitx5-lotus/blob/main/LICENSE">
+      <img src="https://img.shields.io/github/license/LotusInputMethod/fcitx5-lotus?style=flat&color=blue" alt="License">
     </a>
-    <a href="https://github.com/nhktmdzhg/fcitx5-lotus/stargazers">
-      <img src="https://img.shields.io/github/stars/nhktmdzhg/fcitx5-lotus?style=flat&color=yellow" alt="Stars">
+    <a href="https://github.com/LotusInputMethod/fcitx5-lotus/stargazers">
+      <img src="https://img.shields.io/github/stars/LotusInputMethod/fcitx5-lotus?style=flat&color=yellow" alt="Stars">
     </a>
-    <a href="https://github.com/nhktmdzhg/fcitx5-lotus/network/members">
-      <img src="https://img.shields.io/github/forks/nhktmdzhg/fcitx5-lotus?style=flat&color=orange" alt="Forks">
+    <a href="https://github.com/LotusInputMethod/fcitx5-lotus/network/members">
+      <img src="https://img.shields.io/github/forks/LotusInputMethod/fcitx5-lotus?style=flat&color=orange" alt="Forks">
     </a>
-    <a href="https://github.com/nhktmdzhg/fcitx5-lotus/issues">
-      <img src="https://img.shields.io/github/issues/nhktmdzhg/fcitx5-lotus?style=flat&color=red" alt="Issues">
+    <a href="https://github.com/LotusInputMethod/fcitx5-lotus/issues">
+      <img src="https://img.shields.io/github/issues/LotusInputMethod/fcitx5-lotus?style=flat&color=red" alt="Issues">
     </a>
   </p>
 
@@ -34,9 +34,9 @@
     <a href="#installation"><strong>Installation »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/nhktmdzhg/fcitx5-lotus/issues/new?template=bug_report.yml">Report Bug</a>
+    <a href="https://github.com/LotusInputMethod/fcitx5-lotus/issues/new?template=bug_report.yml">Report Bug</a>
     &middot;
-    <a href="https://github.com/nhktmdzhg/fcitx5-lotus/issues/new?template=feature_request.yml">Request Feature</a>
+    <a href="https://github.com/LotusInputMethod/fcitx5-lotus/issues/new?template=feature_request.yml">Request Feature</a>
   </p>
 </div>
 
@@ -198,7 +198,7 @@ Add fcitx5-lotus input to `flake.nix`:
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
     fcitx5-lotus = {
-      url = "github:nhktmdzhg/fcitx5-lotus";
+      url = "github:LotusInputMethod/fcitx5-lotus";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
@@ -265,7 +265,7 @@ sudo zypper install cmake extra-cmake-modules fcitx5-devel libinput-devel system
 
 ```bash
 # Clone repository
-git clone https://github.com/nhktmdzhg/fcitx5-lotus.git
+git clone https://github.com/LotusInputMethod/fcitx5-lotus.git
 cd fcitx5-lotus
 
 # Compile
@@ -508,8 +508,8 @@ Don't forget to give the project a ⭐! Thank you very much!
 
 ### Contributors:
 
-<a href="https://github.com/nhktmdzhg/fcitx5-lotus/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=nhktmdzhg/fcitx5-lotus" alt="contrib.rocks image" />
+<a href="https://github.com/LotusInputMethod/fcitx5-lotus/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=LotusInputMethod/fcitx5-lotus" alt="contrib.rocks image" />
 </a>
 
 ---
@@ -524,8 +524,8 @@ The project is distributed under the GNU General Public License v3. See [`LICENS
 
 ## ✨ Star History
 
-<a href="https://star-history.com/#nhktmdzhg/fcitx5-lotus&Date">
- <img src="https://api.star-history.com/svg?repos=nhktmdzhg/fcitx5-lotus&type=Date" alt="Star History Chart">
+<a href="https://star-history.com/#LotusInputMethod/fcitx5-lotus&Date">
+ <img src="https://api.star-history.com/svg?repos=LotusInputMethod/fcitx5-lotus&type=Date" alt="Star History Chart">
 </a>
 
 ---

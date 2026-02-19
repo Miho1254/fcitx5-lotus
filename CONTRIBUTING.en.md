@@ -29,7 +29,7 @@ Thank you for your interest in contributing to the fcitx5-lotus project! This do
 
 ```bash
 # Clone repository
-git clone https://github.com/nhktmdzhg/fcitx5-lotus.git
+git clone https://github.com/LotusInputMethod/fcitx5-lotus.git
 cd fcitx5-lotus
 
 # Initialize submodules
@@ -50,7 +50,7 @@ Fork this repository on GitHub and clone your fork to your machine.
 ```bash
 git clone https://github.com/yourusername/fcitx5-lotus.git
 cd fcitx5-lotus
-git remote add upstream https://github.com/nhktmdzhg/fcitx5-lotus.git
+git remote add upstream https://github.com/LotusInputMethod/fcitx5-lotus.git
 ```
 
 ### 2. Create a new branch

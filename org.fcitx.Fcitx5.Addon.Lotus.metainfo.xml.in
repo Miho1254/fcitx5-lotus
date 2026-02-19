@@ -9,7 +9,7 @@
   <summary>Vietnamese input method (Lotus)</summary>
   <summary xml:lang="vi">Kiểu gõ tiếng Việt (Lotus)</summary>
   <url type="homepage">https://fcitx-im.org</url>
-  <url type="bugtracker">https://github.com/nhktmdzhg/fcitx5-lotus/issues</url>
+  <url type="bugtracker">https://github.com/LotusInputMethod/fcitx5-lotus/issues</url>
   <project_group>Fcitx</project_group>
   <releases>
     <release version="1.0.0" date="2026-02-19" />

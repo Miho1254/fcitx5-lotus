@@ -19,7 +19,7 @@ stdenv.mkDerivation rec {
   version = "0.12.1";
 
   src = fetchFromGitHub {
-    owner = "nhktmdzhg";
+    owner = "LotusInputMethod";
     repo = "fcitx5-lotus";
     rev = "v${version}";
     fetchSubmodules = true;
