@@ -1,0 +1,175 @@
+name: Test Packaging Build
+
+on:
+  push:
+    branches:
+      - feat/packaging
+  pull_request:
+    branches:
+      - feat/packaging
+
+jobs:
+  build-deb:
+    name: DEB [${{ matrix.codename }}] [${{ matrix.arch }}]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Debian
+          - distro: debian:12
+            codename: bookworm
+            arch: amd64
+          - distro: debian:13
+            codename: trixie
+            arch: amd64
+          - distro: debian:testing
+            codename: testing
+            arch: amd64
+          - distro: debian:unstable
+            codename: sid
+            arch: amd64
+          - distro: debian:unstable
+            codename: sid
+            arch: arm64
+
+          # Ubuntu
+          - distro: ubuntu:22.04
+            codename: jammy
+            arch: amd64
+          - distro: ubuntu:24.04
+            codename: noble
+            arch: amd64
+          - distro: ubuntu:25.04
+            codename: plucky
+            arch: amd64
+          - distro: ubuntu:25.10
+            codename: questing
+            arch: amd64
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        if: matrix.arch == 'arm64'
+        uses: docker/setup-qemu-action@v3
+
+      - name: Prepare debian directory
+        run: cp -r packaging/debian debian
+
+      - name: Build DEB
+        uses: jtdor/build-deb-action@v1
+        with:
+          docker-image: ${{ matrix.distro }}
+          host-arch: ${{ matrix.arch }}
+          buildpackage-opts: --build=binary --no-sign
+
+      - name: Upload DEB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: deb-${{ matrix.codename }}-${{ matrix.arch }}
+          path: debian/artifacts/*.deb
+          retention-days: 3
+
+  build-rpm-fedora:
+    name: RPM [fedora-${{ matrix.releasever }}] [${{ matrix.arch }}]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - distro: fedora:42
+            releasever: 42
+            arch: x86_64
+          - distro: fedora:43
+            releasever: 43
+            arch: x86_64
+          - distro: fedora:rawhide
+            releasever: rawhide
+            arch: x86_64
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        if: matrix.arch == 'aarch64'
+        uses: docker/setup-qemu-action@v3
+
+      - name: Build Fedora RPM
+        uses: addnab/docker-run-action@v3
+        with:
+          image: ${{ matrix.distro }}
+          options: -v ${{ github.workspace }}:/work
+          run: |
+            dnf install -y \
+              rpm-build rpmdevtools cmake extra-cmake-modules \
+              gcc-c++ glibc-devel fcitx5-devel libinput-devel \
+              systemd-rpm-macros libudev-devel libX11-devel \
+              golang libgudev-devel
+            rpmdev-setuptree
+            cp /work/packaging/rpm/fedora/fcitx5-lotus.spec ~/rpmbuild/SPECS/
+            mkdir -p ~/rpmbuild/SOURCES
+            cd /work
+            VERSION=$(grep '^Version:' packaging/rpm/fedora/fcitx5-lotus.spec | awk '{print $2}')
+            tar --exclude='.git' \
+                --exclude='packaging' \
+                --transform "s|^\.|fcitx5-lotus-${VERSION}|" \
+                -czf ~/rpmbuild/SOURCES/fcitx5-lotus-${VERSION}.tar.gz .
+            rpmbuild -bb ~/rpmbuild/SPECS/fcitx5-lotus.spec
+            mkdir -p /work/output
+            find ~/rpmbuild/RPMS -name '*.rpm' -exec cp {} /work/output/ \;
+
+      - name: Upload RPM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rpm-fedora-${{ matrix.releasever }}-${{ matrix.arch }}
+          path: output/*.rpm
+          retention-days: 3
+
+  build-rpm-opensuse:
+    name: RPM [opensuse-${{ matrix.releasever }}] [${{ matrix.arch }}]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - distro: opensuse/tumbleweed
+            releasever: tumbleweed
+            arch: x86_64
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build openSUSE RPM
+        uses: addnab/docker-run-action@v3
+        with:
+          image: ${{ matrix.distro }}
+          options: -v ${{ github.workspace }}:/work
+          run: |
+            zypper install -y \
+              rpm-build rpmdevtools cmake extra-cmake-modules \
+              gcc-c++ glibc-devel fcitx5-devel libinput-devel \
+              systemd-rpm-macros libudev-devel libX11-devel \
+              go libgudev-1_0-devel sysuser-tools
+            rpmdev-setuptree
+            cp /work/packaging/rpm/opensuse/fcitx5-lotus.spec ~/rpmbuild/SPECS/
+            mkdir -p ~/rpmbuild/SOURCES
+            cd /work
+            VERSION=$(grep '^Version:' packaging/rpm/opensuse/fcitx5-lotus.spec | awk '{print $2}')
+            tar --exclude='.git' \
+                --exclude='packaging' \
+                --transform "s|^\.|fcitx5-lotus-${VERSION}|" \
+                -czf ~/rpmbuild/SOURCES/fcitx5-lotus-${VERSION}.tar.gz .
+            rpmbuild -bb ~/rpmbuild/SPECS/fcitx5-lotus.spec
+            mkdir -p /work/output
+            find ~/rpmbuild/RPMS -name '*.rpm' -exec cp {} /work/output/ \;
+
+      - name: Upload RPM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rpm-opensuse-${{ matrix.releasever }}-${{ matrix.arch }}
+          path: output/*.rpm
+          retention-days: 3
