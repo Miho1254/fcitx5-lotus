@@ -1,9 +1,5 @@
 [English](README.en.md) | [Tiếng Việt](README.md)
 
-<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-5-orange.svg?style=flat-square)](#contributors-)
-<!-- ALL-CONTRIBUTORS-BADGE:END -->
-
 <a id="readme-top"></a>
 
 <div align="center">
@@ -31,6 +27,9 @@
     </a>
     <a href="https://github.com/LotusInputMethod/fcitx5-lotus/issues">
       <img src="https://img.shields.io/github/issues/LotusInputMethod/fcitx5-lotus?style=flat&color=red" alt="Issues">
+    </a>
+    <a href="#contributors-">
+      <img src="https://img.shields.io/badge/all_contributors-5-orange.svg?style=flat-square" alt="All Contributors">
     </a>
   </p>
 
