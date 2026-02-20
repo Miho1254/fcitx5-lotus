@@ -424,11 +424,11 @@ After logging out and logging in again:
 ### 1. Customize Input Method
 
 - **How to access:** Right-click the Lotus icon on the system tray to open customization.
-- **Customization options:** _Typing Mode_, _Input Method_, _Charset_, _Spell Check_, _Macro_, _Capitalize Macro_, _Auto non-VN restore_, _Modern Style_, _Free Marking_, _Fix Uinput with ack_.
+- **Customization options:** _Typing Mode_, _Input Method_, _Charset_, _Spell Check_, _Macro_, _Capitalize Macro_, _Auto non-VN restore_, _Modern Style_, _Free Marking_, _Fix Uinput with ack_, _Mode menu_.
 
 ### 2. Typing Mode Menu
 
-In any application, press the **`** key to open the typing mode selection menu, where you can use the mouse or shortcuts to select.  If the backtick shortcut interferes with your workflow (e.g. when writing Markdown code fences), you can turn it off in Lotus' settings using the **Backtick menu** toggle.
+In any application, press the **`** key to open the typing mode selection menu, where you can use the mouse or shortcuts to select.  If the backtick shortcut interferes with your workflow (e.g. when writing Markdown code fences), you can turn it off in Lotus' settings using the **Mode menu** toggle.
 
 | Mode                  | Shortcut | Description                                                                                                                                         |
 | :-------------------- | :------: | :-------------------------------------------------------------------------------------------------------------------------------------------------- |

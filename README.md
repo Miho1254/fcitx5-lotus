@@ -438,10 +438,11 @@ Sau khi đã log out và log in lại:
 | **Modern Style**        | Bật/tắt kiểu đặt dấu thanh hiện đại *(ví dụ: oà, _uý thay vì òa, _úy)*.                                           | Bật             |
 | **Free Marking**        | Bật/tắt bỏ dấu tự do.                                                                                             | Bật             |
 | **Fix Uinput with ack** | Bật/tắt sửa lỗi chế độ `uinput` với ack<br/>Nên bật khi sử dụng các ứng dụng Chromium (Chrome, Brave, Edge, ...). | Tắt             |
+| **Mode Menu**        | Bật/tắt  mở menu chuyển chế độ gõ bằng phím **`** (tắt để nhập biểu tượng trực tiếp). | Bật             |
 
 ### 2. Menu chuyển chế độ gõ
 
-Khi đang ở trong bất kỳ ứng dụng nào, nhấn phím **`** để mở menu chọn chế độ gõ, có thể dùng chuột hoặc phím tắt để chọn.  Nếu dieu nay gây khó chịu (ví dụ khi viết mã Markdown), bạn có thể tắt tiện ích này trong cài đặt Lotus bằng công tắc **Backtick menu**.
+Khi đang ở trong bất kỳ ứng dụng nào, nhấn phím **`** để mở menu chọn chế độ gõ, có thể dùng chuột hoặc phím tắt để chọn.  Nếu điều này gây khó chịu (ví dụ khi viết mã Markdown), bạn có thể tắt menu chế độ trong cài đặt Lotus bằng công tắc **Mode menu**.
 
 | Chế độ                | Phím tắt | Mô tả                                                                                                                                |
 |:--------------------- |:--------:|:------------------------------------------------------------------------------------------------------------------------------------ |

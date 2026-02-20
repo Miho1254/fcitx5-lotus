@@ -235,10 +235,10 @@ namespace fcitx {
         void updateFixUinputWithAckAction(InputContext* ic);
 
         /**
-         * @brief Updates the backtick-menu toggle UI.
+         * @brief Updates the mode-menu action UI.
          * @param ic Current input context.
          */
-        void updateBacktickMenuAction(InputContext* ic);
+        void updateModeMenuAction(InputContext* ic);
 
         /**
          * @brief Updates the input method action UI.
@@ -321,16 +321,15 @@ namespace fcitx {
         std::unique_ptr<SimpleAction>                    modernStyleAction_;
         std::unique_ptr<SimpleAction>                    freeMarkingAction_;
         std::unique_ptr<SimpleAction>                    fixUinputWithAckAction_;
-        /* toggle for the backtick-triggered mode menu */
-        std::unique_ptr<SimpleAction>              backtickMenuAction_;
-        std::vector<ScopedConnection>              connections_;
-        CGoObject                                  dictionary_;
-        std::unordered_map<std::string, LotusMode> appRules_;
-        std::string                                appRulesPath_;
-        bool                                       isSelectingAppMode_ = false;
-        std::string                                currentConfigureApp_;
-        LotusMode                                  globalMode_;
-        EmojiLoader                                emojiLoader_;
+        std::unique_ptr<SimpleAction>                    modeMenuAction_;
+        std::vector<ScopedConnection>                    connections_;
+        CGoObject                                        dictionary_;
+        std::unordered_map<std::string, LotusMode>       appRules_;
+        std::string                                      appRulesPath_;
+        bool                                             isSelectingAppMode_ = false;
+        std::string                                      currentConfigureApp_;
+        LotusMode                                        globalMode_;
+        EmojiLoader                                      emojiLoader_;
     };
 
     /**

@@ -261,18 +261,16 @@ namespace fcitx {
         }));
         uiManager.registerAction("lotus-fixuinputwithack", fixUinputWithAckAction_.get());
 
-        /* backtick menu toggle */
-        backtickMenuAction_ = std::make_unique<SimpleAction>();
-        backtickMenuAction_->setLongText(_("Enable typing mode menu with ` key"));
-        backtickMenuAction_->setIcon("input-keyboard");
-        backtickMenuAction_->setCheckable(true);
-        connections_.emplace_back(backtickMenuAction_->connect<SimpleAction::Activated>([this](InputContext* ic) {
-            config_.backtickMenu.setValue(!*config_.backtickMenu);
+        modeMenuAction_ = std::make_unique<SimpleAction>();
+        modeMenuAction_->setLongText(_("Enable typing mode menu"));
+        modeMenuAction_->setIcon("input-keyboard");
+        modeMenuAction_->setCheckable(true);
+        connections_.emplace_back(modeMenuAction_->connect<SimpleAction::Activated>([this](InputContext* ic) {
+            config_.modeMenu.setValue(!*config_.modeMenu);
             saveConfig();
-            /* nothing to refresh besides UI state */
-            updateBacktickMenuAction(ic);
+            updateModeMenuAction(ic);
         }));
-        uiManager.registerAction("lotus-backtickmenu", backtickMenuAction_.get());
+        uiManager.registerAction("lotus-modemenu", modeMenuAction_.get());
 
         reloadConfig();
         globalMode_ = modeStringToEnum(config_.mode.value());
@@ -342,7 +340,7 @@ namespace fcitx {
         updateModernStyleAction(nullptr);
         updateFreeMarkingAction(nullptr);
         updateFixUinputWithAckAction(nullptr);
-        updateBacktickMenuAction(nullptr);
+        updateModeMenuAction(nullptr);
     }
 
     void LotusEngine::setSubConfig(const std::string& path, const RawConfig& config) {
@@ -576,7 +574,7 @@ namespace fcitx {
             return;
         }
 
-        if (!keyEvent.isRelease() && keyEvent.rawKey().check(FcitxKey_grave) && *config_.backtickMenu) {
+        if (!keyEvent.isRelease() && keyEvent.rawKey().check(FcitxKey_grave) && *config_.modeMenu) {
             currentConfigureApp_ = ic->program();
             if (currentConfigureApp_.empty())
                 currentConfigureApp_ = "unknown-app";
@@ -745,11 +743,11 @@ namespace fcitx {
         }
     }
 
-    void LotusEngine::updateBacktickMenuAction(InputContext* ic) {
-        backtickMenuAction_->setChecked(*config_.backtickMenu);
-        backtickMenuAction_->setShortText(*config_.backtickMenu ? _("Backtick menu: On") : _("Backtick menu: Off"));
+    void LotusEngine::updateModeMenuAction(InputContext* ic) {
+        modeMenuAction_->setChecked(*config_.modeMenu);
+        modeMenuAction_->setShortText(*config_.modeMenu ? _("Mode menu: On") : _("Mode menu: Off"));
         if (ic) {
-            backtickMenuAction_->update(ic);
+            modeMenuAction_->update(ic);
         }
     }
 
