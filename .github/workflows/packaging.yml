@@ -44,6 +44,8 @@ jobs:
 
       - name: Build DEB
         uses: jtdor/build-deb-action@v1
+        env:
+          DEB_BUILD_OPTIONS: parallel=2
         with:
           docker-image: ${{ matrix.distro }}
           buildpackage-opts: --build=binary --no-sign
@@ -85,7 +87,7 @@ jobs:
               rpm-build rpmdevtools cmake extra-cmake-modules \
               gcc-c++ glibc-devel fcitx5-devel libinput-devel \
               systemd-rpm-macros libudev-devel libX11-devel \
-              golang libgudev-devel
+              golang libgudev-devel gettext-devel
             rpmdev-setuptree
             cp /work/packaging/rpm/fedora/fcitx5-lotus.spec ~/rpmbuild/SPECS/
             mkdir -p ~/rpmbuild/SOURCES

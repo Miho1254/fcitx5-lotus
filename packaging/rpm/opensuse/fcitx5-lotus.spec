@@ -111,5 +111,5 @@ echo "------------------------------------------------"
 %systemd_postun_with_restart fcitx5-lotus-server@.service
 
 %changelog
-* Sun Feb 19 2026 Nguyen Hoang Ky <nhktmdzhg@gmail.com> - 1.0.0-1
+* Thu Feb 19 2026 Nguyen Hoang Ky <nhktmdzhg@gmail.com> - 1.0.0-1
 - First stable release
