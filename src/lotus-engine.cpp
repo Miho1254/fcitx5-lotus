@@ -324,7 +324,11 @@ namespace fcitx {
     const Configuration* LotusEngine::getSubConfig(const std::string& path) const {
         if (path == "custom_keymap")
             return &customKeymap_;
+#if __cplusplus >= 202002L
+        if (path.starts_with(MacroPrefix)) {
+#else
         if (stringutils::startsWith(path, MacroPrefix)) {
+#endif
             const auto imName = path.substr(strlen(MacroPrefix));
             if (auto iter = macroTables_.find(imName); iter != macroTables_.end())
                 return &iter->second;
@@ -360,7 +364,11 @@ namespace fcitx {
             customKeymap_.load(config, true);
             safeSaveAsIni(customKeymap_, CustomKeymapFile);
             refreshEngine();
+#if __cplusplus >= 202002L
+        } else if (path.starts_with(MacroPrefix)) {
+#else
         } else if (stringutils::startsWith(path, MacroPrefix)) {
+#endif
             const auto imName = path.substr(strlen(MacroPrefix));
             if (auto iter = macroTables_.find(imName); iter != macroTables_.end()) {
                 iter->second.load(config, true);
