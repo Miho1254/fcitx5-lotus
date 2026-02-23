@@ -1,153 +1,188 @@
-# Hướng dẫn cài đặt fcitx5-lotus trên các distro: Fedora, Debian, OpenSUSE, Ubuntu
+# Hướng dẫn cài đặt fcitx5-lotus trên các distro: Arch, Fedora, Debian, OpenSUSE, Raspbian, Ubuntu
 
-## Debian / Ubuntu
+## Arch Linux
 
-### Bước 1: Import GPG key
+- Sửa file `/etc/pacman.conf` và thêm các dòng sau:
 
-```bash
-sudo mkdir -p /etc/apt/keyrings
-curl -fsSL https://fcitx5-lotus.pages.dev/pubkey.gpg \
-  | sudo gpg --dearmor -o /etc/apt/keyrings/fcitx5-lotus.gpg
+```
+[home_iamnanoka_Arch]
+Server = https://download.opensuse.org/repositories/home:/iamnanoka/Arch/$arch
 ```
 
-### Bước 2: Thêm repository
-
-Thay `CODENAME` theo bảng bên dưới:
+- Sau đó chạy các lệnh dưới để cài đặt:
 
 ```bash
-echo "deb [signed-by=/etc/apt/keyrings/fcitx5-lotus.gpg] \
-  https://fcitx5-lotus.pages.dev/apt/CODENAME CODENAME main" \
-  | sudo tee /etc/apt/sources.list.d/fcitx5-lotus.list
+key=$(curl -fsSL https://download.opensuse.org/repositories/home:iamnanoka/Arch/$(uname -m)/home_iamnanoka_Arch.key)
+fingerprint=$(gpg --quiet --with-colons --import-options show-only --import --fingerprint <<< "${key}" | awk -F: '$1 == "fpr" { print $10 }')
+sudo pacman-key --init
+sudo pacman-key --add - <<< "${key}"
+sudo pacman-key --lsign-key "${fingerprint}"
+sudo pacman -Sy home_iamnanoka_Arch/fcitx5-lotus
 ```
 
-| Hệ điều hành     | CODENAME   |
-| ---------------- | ---------- |
-| Debian 12        | `bookworm` |
-| Debian 13        | `trixie`   |
-| Debian Testing   | `testing`  |
-| Debian Unstable  | `sid`      |
-| Ubuntu 22.04 LTS | `jammy`    |
-| Ubuntu 24.04 LTS | `noble`    |
-| Ubuntu 25.04     | `plucky`   |
-| Ubuntu 25.10     | `questing` |
+## Debian
 
-Ví dụ với Debian 12:
+### Debian Unstable
+
+Chạy các lệnh sau:
 
 ```bash
-echo "deb [signed-by=/etc/apt/keyrings/fcitx5-lotus.gpg] \
-  https://fcitx5-lotus.pages.dev/apt/bookworm bookworm main" \
-  | sudo tee /etc/apt/sources.list.d/fcitx5-lotus.list
-```
-
-### Bước 3: Cài đặt
-
-```bash
+echo 'deb http://download.opensuse.org/repositories/home:/iamnanoka/Debian_Unstable/ /' | sudo tee /etc/apt/sources.list.d/home:iamnanoka.list
+curl -fsSL https://download.opensuse.org/repositories/home:iamnanoka/Debian_Unstable/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/home_iamnanoka.gpg > /dev/null
 sudo apt update
 sudo apt install fcitx5-lotus
 ```
 
-### Gỡ cài đặt
+### Debian Testing
+
+Chạy các lệnh sau:
 
 ```bash
-sudo apt remove fcitx5-lotus
-sudo rm /etc/apt/sources.list.d/fcitx5-lotus.list
-sudo rm /etc/apt/keyrings/fcitx5-lotus.gpg
+echo 'deb http://download.opensuse.org/repositories/home:/iamnanoka/Debian_Testing/ /' | sudo tee /etc/apt/sources.list.d/home:iamnanoka.list
+curl -fsSL https://download.opensuse.org/repositories/home:iamnanoka/Debian_Testing/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/home_iamnanoka.gpg > /dev/null
 sudo apt update
+sudo apt install fcitx5-lotus
 ```
 
----
+### Debian 13
+
+Chạy các lệnh sau:
+
+```bash
+echo 'deb http://download.opensuse.org/repositories/home:/iamnanoka/Debian_13/ /' | sudo tee /etc/apt/sources.list.d/home:iamnanoka.list
+curl -fsSL https://download.opensuse.org/repositories/home:iamnanoka/Debian_13/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/home_iamnanoka.gpg > /dev/null
+sudo apt update
+sudo apt install fcitx5-lotus
+```
+
+### Debian 12
+
+Chạy các lệnh sau:
+
+```bash
+echo 'deb http://download.opensuse.org/repositories/home:/iamnanoka/Debian_12/ /' | sudo tee /etc/apt/sources.list.d/home:iamnanoka.list
+curl -fsSL https://download.opensuse.org/repositories/home:iamnanoka/Debian_12/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/home_iamnanoka.gpg > /dev/null
+sudo apt update
+sudo apt install fcitx5-lotus
+```
 
 ## Fedora
 
-### Bước 1: Import GPG key
+### Fedora Rawhide
+
+Chạy các lệnh sau:
 
 ```bash
-sudo rpm --import https://fcitx5-lotus.pages.dev/pubkey.gpg
-```
-
-### Bước 2: Thêm repository
-
-Thay `RELEASEVER` bằng `42`, `43` hoặc `rawhide`:
-
-```bash
-sudo tee /etc/yum.repos.d/fcitx5-lotus.repo << 'EOF'
-[fcitx5-lotus]
-name=fcitx5-lotus — Fedora RELEASEVER
-baseurl=https://fcitx5-lotus.pages.dev/rpm/fedora/RELEASEVER/x86_64/
-enabled=1
-gpgcheck=1
-gpgkey=https://fcitx5-lotus.pages.dev/pubkey.gpg
-EOF
-```
-
-Ví dụ với Fedora 43:
-
-```bash
-sudo tee /etc/yum.repos.d/fcitx5-lotus.repo << 'EOF'
-[fcitx5-lotus]
-name=fcitx5-lotus — Fedora 43
-baseurl=https://fcitx5-lotus.pages.dev/rpm/fedora/43/x86_64/
-enabled=1
-gpgcheck=1
-gpgkey=https://fcitx5-lotus.pages.dev/pubkey.gpg
-EOF
-```
-
-### Bước 3: Cài đặt
-
-```bash
+sudo dnf config-manager addrepo --from-repofile=https://download.opensuse.org/repositories/home:iamnanoka/Fedora_Rawhide/home:iamnanoka.repo
 sudo dnf install fcitx5-lotus
 ```
 
-### Gỡ cài đặt
+### Fedora 43
+
+Chạy các lệnh sau:
 
 ```bash
-sudo dnf remove fcitx5-lotus
-sudo rm /etc/yum.repos.d/fcitx5-lotus.repo
+sudo dnf config-manager addrepo --from-repofile=https://download.opensuse.org/repositories/home:iamnanoka/Fedora_43/home:iamnanoka.repo
+sudo dnf install fcitx5-lotus
 ```
 
----
+### Fedora 42
 
-## openSUSE Tumbleweed
-
-### Bước 1: Import GPG key
+Chạy các lệnh sau:
 
 ```bash
-sudo rpm --import https://fcitx5-lotus.pages.dev/pubkey.gpg
+sudo dnf config-manager addrepo --from-repofile=https://download.opensuse.org/repositories/home:iamnanoka/Fedora_42/home:iamnanoka.repo
+sudo dnf install fcitx5-lotus
 ```
 
-### Bước 2: Thêm repository
+## OpenSUSE
+
+### Tumbleweed
+
+Chạy các lệnh sau:
 
 ```bash
-sudo zypper addrepo \
-  https://fcitx5-lotus.pages.dev/rpm/opensuse/tumbleweed/x86_64/ \
-  fcitx5-lotus
+sudo zypper addrepo https://download.opensuse.org/repositories/home:iamnanoka/openSUSE_Tumbleweed/home:iamnanoka.repo
 sudo zypper refresh
-```
-
-### Bước 3: Cài đặt
-
-```bash
 sudo zypper install fcitx5-lotus
 ```
 
-### Gỡ cài đặt
+### Leap 16
+
+Chạy các lệnh sau:
 
 ```bash
-sudo zypper remove fcitx5-lotus
-sudo zypper removerepo fcitx5-lotus
+sudo zypper addrepo https://download.opensuse.org/repositories/home:iamnanoka/16.0/home:iamnanoka.repo
+sudo zypper refresh
+sudo zypper install fcitx5-lotus
 ```
 
----
+## Raspbian
 
-## Cài thủ công (không dùng repo)
+### Raspbian 13
 
-Tải file `.deb` hoặc `.rpm` trực tiếp từ [GitHub Releases](https://github.com/LotusInputMethod/fcitx5-lotus/releases/latest):
+Chạy các lệnh sau:
 
 ```bash
-# Debian/Ubuntu
-sudo dpkg -i fcitx5-lotus_*.deb
+echo 'deb http://download.opensuse.org/repositories/home:/iamnanoka/Raspbian_13/ /' | sudo tee /etc/apt/sources.list.d/home:iamnanoka.list
+curl -fsSL https://download.opensuse.org/repositories/home:iamnanoka/Raspbian_13/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/home_iamnanoka.gpg > /dev/null
+sudo apt update
+sudo apt install fcitx5-lotus
+```
 
-# Fedora / openSUSE
-sudo rpm -i fcitx5-lotus-*.rpm
+### Raspbian 12
+
+Chạy các lệnh sau:
+
+```bash
+echo 'deb http://download.opensuse.org/repositories/home:/iamnanoka/Raspbian_12/ /' | sudo tee /etc/apt/sources.list.d/home:iamnanoka.list
+curl -fsSL https://download.opensuse.org/repositories/home:iamnanoka/Raspbian_12/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/home_iamnanoka.gpg > /dev/null
+sudo apt update
+sudo apt install fcitx5-lotus
+```
+
+## xUbuntu
+
+### xUbuntu 25.10
+
+Chạy các lệnh sau:
+
+```bash
+echo 'deb http://download.opensuse.org/repositories/home:/iamnanoka/xUbuntu_25.10/ /' | sudo tee /etc/apt/sources.list.d/home:iamnanoka.list
+curl -fsSL https://download.opensuse.org/repositories/home:iamnanoka/xUbuntu_25.10/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/home_iamnanoka.gpg > /dev/null
+sudo apt update
+sudo apt install fcitx5-lotus
+```
+
+### xUbuntu 25.04
+
+Chạy các lệnh sau:
+
+```bash
+echo 'deb http://download.opensuse.org/repositories/home:/iamnanoka/xUbuntu_25.04/ /' | sudo tee /etc/apt/sources.list.d/home:iamnanoka.list
+curl -fsSL https://download.opensuse.org/repositories/home:iamnanoka/xUbuntu_25.04/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/home_iamnanoka.gpg > /dev/null
+sudo apt update
+sudo apt install fcitx5-lotus
+```
+
+### xUbuntu 24.04
+
+Chạy các lệnh sau:
+
+```bash
+echo 'deb http://download.opensuse.org/repositories/home:/iamnanoka/xUbuntu_24.04/ /' | sudo tee /etc/apt/sources.list.d/home:iamnanoka.list
+curl -fsSL https://download.opensuse.org/repositories/home:iamnanoka/xUbuntu_24.04/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/home_iamnanoka.gpg > /dev/null
+sudo apt update
+sudo apt install fcitx5-lotus
+```
+
+### xUbuntu 22.04
+
+Chạy các lệnh sau:
+
+```bash
+echo 'deb http://download.opensuse.org/repositories/home:/iamnanoka/xUbuntu_22.04/ /' | sudo tee /etc/apt/sources.list.d/home:iamnanoka.list
+curl -fsSL https://download.opensuse.org/repositories/home:iamnanoka/xUbuntu_22.04/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/home_iamnanoka.gpg > /dev/null
+sudo apt update
+sudo apt install fcitx5-lotus
 ```
