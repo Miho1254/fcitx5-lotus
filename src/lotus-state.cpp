@@ -153,10 +153,16 @@ namespace fcitx {
             return false;
         }
 
-        int         cursor  = s.cursor();
-        int         anchor  = s.anchor();
-        const auto& text    = s.text();
-        size_t      textLen = fcitx_utf8_strlen(text.c_str());
+        const int    cursor  = s.cursor();
+        const int    anchor  = s.anchor();
+        const auto&  text    = s.text();
+        const size_t textLen = fcitx_utf8_strlen(text.c_str());
+
+        // Fix that surrounding text is delay update
+        const size_t buffLen    = fcitx_utf8_strlen(oldPreBuffer_.c_str());
+        const size_t pb         = text.find(oldPreBuffer_);
+        size_t       rangeStart = buffLen >= static_cast<size_t>(cursor) + 1 ? 0 : static_cast<size_t>(cursor) - buffLen;
+        const bool   sameprefix = !(pb == std::string::npos || pb < rangeStart || pb > static_cast<size_t>(cursor));
 
         // Detect browser autofill/autocomplete suggestions via selection.
         if (cursor != anchor) {
@@ -166,6 +172,8 @@ namespace fcitx {
             // Only consider it browser autofill if the selection starts at the cursor
             // and extends to the end of the line (common address bar behavior).
             if (selectionStart >= cursor || (selectionStart < cursor && selectionEnd > cursor)) {
+                if (!sameprefix)
+                    return false;
                 // If the selection contains a newline, it's likely a multiline editor (AI ghost text),
                 // not a single-line URL/Search bar.
                 size_t p = text.find('\n', selectionStart);
@@ -183,7 +191,7 @@ namespace fcitx {
 
         // Heuristic: rapid text growth in a single-line context.
         // Applied only when no newline is present after the cursor to distinguish from AI text in editors.
-        if (textLen - 1 > static_cast<size_t>(cursor) && cursor == realtextLen && text.find('\n', cursor) == std::string::npos)
+        if (textLen - 1 > static_cast<size_t>(cursor) && cursor == realtextLen && text.find('\n', cursor) == std::string::npos && sameprefix)
             return true;
 
         if (realtextLen < cursor)
