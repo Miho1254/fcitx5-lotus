@@ -500,11 +500,10 @@ Thêm dòng sau vào file `~/.config/kanata/kanata.kbd`
 | **Free Marking**        | Bật/tắt bỏ dấu tự do.                                                                                            | Bật             |
 | **Fix Uinput with ack** | Bật/tắt sửa lỗi chế độ Uinput với ack.<br/>Nên bật khi sử dụng các ứng dụng Chromium (Chrome, Brave, Edge, ...). | Tắt             |
 | **Lotus Icons**         | Bật/tắt sử dụng icon Lotus thay vì icon mặc định V E.                                                            | Tắt             |
-| **Typing Mode Menu**    | Bật/tắt mở menu chuyển chế độ gõ bằng phím **`** (tắt để nhập ký tự trực tiếp).                                  | Bật             |
 
 ### 2. Menu chuyển chế độ gõ
 
-Khi con trỏ đang ở trong ô nhập liệu (có thể gõ văn bản), nhấn phím **`** để mở menu chọn chế độ gõ; bạn có thể dùng chuột hoặc phím tắt để chọn chế độ mong muốn.
+Khi con trỏ đang ở trong ô nhập liệu (có thể gõ văn bản), nhấn phím `` ` `` để mở menu chọn chế độ gõ; bạn có thể dùng chuột hoặc phím tắt để chọn chế độ mong muốn. Phím `` ` `` này cũng có thể tuỳ chỉnh trong Fcitx5 Configuration nếu công việc của bạn cần gõ phím `` ` `` nhiều (ví dụ: khi viết file Markdown).
 
 | Chế độ                | Phím tắt | Mô tả                                                                                                                                |
 | :-------------------- | :------: | :----------------------------------------------------------------------------------------------------------------------------------- |
@@ -516,7 +515,6 @@ Khi con trỏ đang ở trong ô nhập liệu (có thể gõ văn bản), nhấ
 | **Emoji Picker**      |  **W**   | Tìm kiếm và nhập Emoji (nguồn EmojiOne, hỗ trợ fuzzy search).                                                                        |
 | **OFF**               |  **E**   | Tắt bộ gõ.                                                                                                                           |
 | **Default Typing**    |  **R**   | Chế độ gõ mặc định được cấu hình tại tuỳ chọn _Typing mode_.                                                                         |
-| **Type `**            |  **`**   | Nhập ký tự **`**.                                                                                                                    |
 
 Bộ gõ sẽ tự động lưu chế độ gõ đã dùng gần nhất cho từng ứng dụng và khôi phục cấu hình đó khi bạn mở lại chúng.
 

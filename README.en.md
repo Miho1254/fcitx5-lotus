@@ -480,11 +480,11 @@ Add this line to file `~/.config/kanata/kanata.kbd`
 ### 1. Customize input method
 
 - **Access:** Right-click the Lotus icon on the system tray to open customization.
-- **Customization options:** _Typing Mode_, _Input Method_, _Charset_, _Spell Check_, _Macro_, _Capitalize Macro_, _Auto non-VN restore_, _Modern Style_, _Free Marking_, _Fix Uinput with ack_, _Lotus status icons_, _Mode menu_.
+- **Customization options:** _Typing Mode_, _Input Method_, _Charset_, _Spell Check_, _Macro_, _Capitalize Macro_, _Auto non-VN restore_, _Modern Style_, _Free Marking_, _Fix Uinput with ack_, _Lotus status icons_.
 
 ### 2. Typing mode menu
 
-In any application, press the **`** key to open the typing mode selection menu, where you can use the mouse or shortcuts to select. If the backtick shortcut interferes with your workflow (e.g. when writing Markdown code fences), you can turn it off in Lotus' settings using the **Mode menu** toggle.
+In any application, press the **`** key to open the typing mode selection menu, where you can use the mouse or shortcuts to select. If the backtick shortcut interferes with your workflow (e.g. when writing Markdown code fences), you can change this shortcut in Fcitx5 Configuration.
 
 | Mode                  | Shortcut | Description                                                                                                                                         |
 | :-------------------- | :------: | :-------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -496,7 +496,6 @@ In any application, press the **`** key to open the typing mode selection menu, 
 | **Emoji Picker**      |  **W**   | Search and input Emojis (EmojiOne source, fuzzy search supported).                                                                                  |
 | **OFF**               |  **E**   | Turn off input method.                                                                                                                              |
 | **Default Typing**    |  **R**   | Default typing mode configured in the _Typing mode_ option.                                                                                         |
-| **Type `**            |  **`**   | Type the **`** character.                                                                                                                           |
 
 The input method automatically saves the most recently used typing mode for each application and restores that configuration when you reopen them.
 
