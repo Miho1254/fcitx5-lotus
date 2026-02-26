@@ -13,7 +13,9 @@ BuildRequires:  cmake
 BuildRequires:  extra-cmake-modules
 BuildRequires:  gcc-c++
 BuildRequires:  glibc-devel
-BuildRequires:  fcitx5-devel
+BuildRequires:  cmake(Fcitx5Core)
+BuildRequires:  cmake(Fcitx5Qt6WidgetsAddons)
+BuildRequires:  cmake(qt6)
 BuildRequires:  libinput-devel
 BuildRequires:  systemd-rpm-macros
 BuildRequires:  pkgconfig(libudev)
@@ -51,6 +53,7 @@ Vietnamese input method for fcitx5
 
 %dir %{_libdir}/fcitx5
 %{_libdir}/fcitx5/liblotus.so
+%{_libdir}/fcitx5/qt6/libfcitx5-lotus-keymap-editor.so
 
 %{_prefix}/lib/modules-load.d/fcitx5-lotus.conf
 %{_unitdir}/fcitx5-lotus-server@.service

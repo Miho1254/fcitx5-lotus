@@ -183,7 +183,7 @@ jobs:
             pacman -Syu --noconfirm
             pacman -S --noconfirm \
               cmake extra-cmake-modules gcc go \
-              fcitx5 libinput libx11 systemd \
+              fcitx5-qt libinput libx11 systemd \
               make pkgconf zip
 
             cd /work

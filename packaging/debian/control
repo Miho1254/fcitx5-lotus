@@ -13,7 +13,8 @@ Build-Depends: debhelper (>= 13),
                libinput-dev,
                libudev-dev,
                pkg-config,
-               libx11-dev
+               libx11-dev,
+               libfcitx5-qt6-dev
 Standards-Version: 4.6.0
 
 Package: fcitx5-lotus
