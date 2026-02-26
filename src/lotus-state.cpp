@@ -161,7 +161,7 @@ namespace fcitx {
         // Fix that surrounding text is delay update
         const size_t buffLen    = fcitx_utf8_strlen(oldPreBuffer_.c_str());
         const size_t pb         = text.find(oldPreBuffer_);
-        size_t       rangeStart = buffLen >= static_cast<size_t>(cursor) + 1 ? 0 : static_cast<size_t>(cursor) - buffLen;
+        size_t       rangeStart = buffLen >= static_cast<size_t>(cursor) ? 0 : static_cast<size_t>(cursor) - buffLen;
         const bool   sameprefix = !(pb == std::string::npos || pb < rangeStart || pb > static_cast<size_t>(cursor));
 
         // Detect browser autofill/autocomplete suggestions via selection.
@@ -191,7 +191,7 @@ namespace fcitx {
 
         // Heuristic: rapid text growth in a single-line context.
         // Applied only when no newline is present after the cursor to distinguish from AI text in editors.
-        if (textLen - 1 > static_cast<size_t>(cursor) && cursor == realtextLen && text.find('\n', cursor) == std::string::npos && sameprefix)
+        if (textLen > static_cast<size_t>(cursor) && cursor == realtextLen && text.find('\n', cursor) == std::string::npos && sameprefix)
             return true;
 
         if (realtextLen < cursor)
