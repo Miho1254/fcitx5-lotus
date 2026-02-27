@@ -9,21 +9,23 @@
   gettext,
   hicolor-icon-theme,
   fcitx5,
+  kdePackages,
   libinput,
   libx11,
   libcap,
   udev,
+  qt6,
 }:
 stdenv.mkDerivation rec {
   pname = "fcitx5-lotus";
-  version = "1.1.0";
+  version = "1.2.0";
 
   src = fetchFromGitHub {
     owner = "LotusInputMethod";
     repo = "fcitx5-lotus";
     rev = "v${version}";
     fetchSubmodules = true;
-    sha256 = "sha256-lI8gta39VeRg7GEl9DpQRSgBtGzYUWICqgSjAMAnLgE=";
+    sha256 = "sha256-eyfmoZfe0aC/1XfSVWIZrBHtdSoqIxnfgXAnHXAqQ+o=";
   };
 
   nativeBuildInputs = [
@@ -33,14 +35,17 @@ stdenv.mkDerivation rec {
     go
     gettext
     hicolor-icon-theme
+    qt6.wrapQtAppsHook
   ];
 
   buildInputs = [
     fcitx5
+    kdePackages.fcitx5-qt
     libinput
     libx11
     libcap
     udev
+    qt6.qtbase
   ];
 
   preConfigure = ''
