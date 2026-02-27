@@ -501,9 +501,15 @@ Thêm dòng sau vào file `~/.config/kanata/kanata.kbd`
 | **Fix Uinput with ack** | Bật/tắt sửa lỗi chế độ Uinput với ack.<br/>Nên bật khi sử dụng các ứng dụng Chromium (Chrome, Brave, Edge, ...). | Tắt             |
 | **Lotus Icons**         | Bật/tắt sử dụng icon Lotus thay vì icon mặc định V E.                                                            | Tắt             |
 
+- Hoặc có thể nhấp chuột phải vào biểu tượng Lotus trên system tray -> **Input Method Settings** -> Chọn **Lotus** -> **Configure** (biểu tượng bánh răng ở giữa của giao diện _Fcitx Configuration_) để tuỳ chỉnh chi tiết một số tuỳ chọn khác, như:
+
+  + Gõ tắt/ Macro: nhấn vào biểu tượng bánh răng bên cạnh dòng chọn _Input Method_ để mở giao diện thêm bớt macro cho kiểu gõ hiện tại. **Lưu ý:** các từ gõ tắt chỉ có hiệu lực với kiểu gõ được chọn, nếu muốn áp dụng cho kiểu gõ khác, hãy đổi kiểu gõ và thêm từ gõ tắt từ đầu như trên.
+  + Keymap tuỳ chỉnh: nhấn vào biểu tượng bánh răng trên dòng _Custom Keymap_ để mở giao diện tuỳ chỉnh keymap, bạn có thể nhập keymap từ một kiểu gõ có sẵn, hoặc tự tạo keymap của riêng mình. Sau khi tuỳ chỉnh, chọn kiểu gõ **Custom** để áp dụng keymap tuỳ chỉnh.
+  + Phím tắt cho menu chế độ gõ: mặc định, menu này sử dụng phím `` ` `` để mở menu ở tất cả các ứng dụng, nếu công việc của bạn thường xuyên dùng phím này hoặc đơn giản bạn chỉ không thích phím `` ` ``, nhấn vào nút chọn phím tắt bên cạnh tuỳ chọn _Mode menu hotkey_ để nhập phím tắt mà bạn muốn. Bạn cũng có thể nhấn nút `+` để tạo thêm phím tắt mới nếu muốn.
+
 ### 2. Menu chuyển chế độ gõ
 
-Khi con trỏ đang ở trong ô nhập liệu (có thể gõ văn bản), nhấn phím `` ` `` để mở menu chọn chế độ gõ; bạn có thể dùng chuột hoặc phím tắt để chọn chế độ mong muốn. Phím `` ` `` này cũng có thể tuỳ chỉnh trong Fcitx5 Configuration nếu công việc của bạn cần gõ phím `` ` `` nhiều (ví dụ: khi viết file Markdown).
+Khi con trỏ đang ở trong ô nhập liệu (có thể gõ văn bản), nhấn phím `` ` `` (hoặc phím tắt bạn đã tuỳ chỉnh ở trên) để mở menu chọn chế độ gõ; bạn có thể dùng chuột hoặc phím tắt để chọn chế độ mong muốn.
 
 | Chế độ                | Phím tắt | Mô tả                                                                                                                                |
 | :-------------------- | :------: | :----------------------------------------------------------------------------------------------------------------------------------- |

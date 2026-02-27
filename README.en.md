@@ -480,11 +480,29 @@ Add this line to file `~/.config/kanata/kanata.kbd`
 ### 1. Customize input method
 
 - **Access:** Right-click the Lotus icon on the system tray to open customization.
-- **Customization options:** _Typing Mode_, _Input Method_, _Charset_, _Spell Check_, _Macro_, _Capitalize Macro_, _Auto non-VN restore_, _Modern Style_, _Free Marking_, _Fix Uinput with ack_, _Lotus status icons_.
+
+| Option                  | Description                                                                                                                    | Default         |
+| :---------------------- | :----------------------------------------------------------------------------------------------------------------------------- | :-------------- |
+| **Typing Mode**         | Select typing mode.                                                                                                            | Uinput (Smooth) |
+| **Input Method**        | Select input method.                                                                                                           | Telex           |
+| **Charset**             | Select character set.                                                                                                          | Unicode         |
+| **Spell Check**         | Enable/disable Vietnamese spell checking.                                                                                      | On              |
+| **Macro**               | Enable/disable shorthand typing.                                                                                               | On              |
+| **Capitalize Macro**    | Enable/disable uppercase shorthand typing.                                                                                     | On              |
+| **Auto non-VN restore** | Enable/disable auto-restore for non-Vietnamese words.                                                                          | On              |
+| **Modern Style**        | Enable/disable modern tone mark placement style _(e.g. oà, *uý instead of òa, *úy)_.                                           | On              |
+| **Free Marking**        | Enable/disable free tone marking.                                                                                              | On              |
+| **Fix Uinput with ack** | Enable/disable fixing Uinput mode with ack.<br/>Recommended when using Chromium-based applications (Chrome, Brave, Edge, ...). | Off             |
+| **Lotus Icons**         | Enable/disable using Lotus icons instead of the default V E icons.                                                             | Off             |
+
+- Alternatively, you can right-click the Lotus icon in the system tray -> **Input Method Settings** -> Select **Lotus** -> **Configure** (the gear icon in the middle of the _Fcitx Configuration_ interface) to customize some additional options in detail, such as:
+  - Macro: click the gear icon next to the _Input Method_ selection row to open the interface for adding or removing macros for the current input method. **Note:** shorthand entries only take effect for the selected input method. If you want to apply them to another input method, switch to that method and re-add the shorthand entries from scratch.
+  - Custom Keymap: click the gear icon on the _Custom Keymap_ row to open the keymap customization interface. You can import a keymap from an existing input method or create your own. After customizing, select the **Custom** input method to apply your custom keymap.
+  - Mode menu hotkey: by default, this menu uses the `` ` `` key to open the menu in all applications. If your workflow frequently uses this key, or you simply prefer a different key, click the hotkey selection button next to the _Mode menu hotkey_ option to enter your preferred shortcut. You can also click the `+` button to add additional hotkeys if desired.
 
 ### 2. Typing mode menu
 
-In any application, press the **`** key to open the typing mode selection menu, where you can use the mouse or shortcuts to select. If the backtick shortcut interferes with your workflow (e.g. when writing Markdown code fences), you can change this shortcut in Fcitx5 Configuration.
+In any application, press the **`** key (or the hotkey you have configured above) to open the typing mode selection menu, where you can use the mouse or shortcuts to select.
 
 | Mode                  | Shortcut | Description                                                                                                                                         |
 | :-------------------- | :------: | :-------------------------------------------------------------------------------------------------------------------------------------------------- |
