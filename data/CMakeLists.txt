@@ -1,4 +1,4 @@
-install(DIRECTORY icons/scalable DESTINATION "${CMAKE_INSTALL_DATADIR}/icons/hicolor"
+install(DIRECTORY icons/ DESTINATION "${CMAKE_INSTALL_DATADIR}/icons/"
         PATTERN .* EXCLUDE
         PATTERN *~ EXCLUDE)
 
